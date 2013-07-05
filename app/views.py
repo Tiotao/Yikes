@@ -4,7 +4,7 @@ from app import app, db, lm, oid
 from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
 from models import User, ROLE_USER, ROLE_ADMIN, Post, Record
 from datetime import datetime
-from config import POSTS_PER_PAGE, MAX_SEARCH_RESULTS
+from config import RECORDS_PER_PAGE, MAX_SEARCH_RESULTS
 
 
 @lm.user_loader
@@ -13,25 +13,28 @@ def load_user(id):
     return User.query.get(int(id))
 
 @app.route('/', methods = ['GET', 'POST'])
-@app.route('/index', methods records = db.relationship('Record', backref = 'records', lazy = 'dynamic')= ['GET', 'POST'])
+@app.route('/index', methods= ['GET', 'POST'])
 @app.route('/index/<int:page>', methods = ['GET', 'POST'])
 @login_required
 def index(page = 1):
     form = RecordForm(request.form)
-    if request.method == 'POST':
-        form.assigned.choices = g.user.mutual_friends()
+    friends = sorted([(c.id, c.nickname) for c in g.user.mutual_friends()], key=lambda friend: friend[0])
+    form.lender.choices = friends
+    flash(friends)
 
     if form.validate_on_submit():
-        post = Post(body = form.post.data, timestamp = datetime.utcnow(), author = g.user)
-        db.session.add(post)
+        record = Record(amount = form.amount.data, timestamp = datetime.utcnow(), lender_id = form.lender.data, borrower_id = g.user.id)
+        db.session.add(record)
         db.session.commit()
-        flash('Your post is now live!')
+        flash('Your record is now live!')
         return redirect(url_for('index'))
-    posts = g.user.followed_posts().paginate(page, POSTS_PER_PAGE, False)
+    borrow_records = g.user.borrow_records().paginate(page, RECORDS_PER_PAGE, False)
+    lend_records = g.user.lend_records().paginate(page, RECORDS_PER_PAGE, False)
     return render_template("index.html",
         title = 'Home',
         form = form,
-        posts = posts)
+        borrow_records = borrow_records,
+        lend_records = lend_records,)
 
 @app.route('/login', methods = ['GET', 'POST'])
 @oid.loginhandler
@@ -93,10 +96,12 @@ def user(nickname, page = 1):
     if user == None:
         flash('User ' + nickname +' does not exist!' )
         return redirect(url_for('index'))
-    posts = user.posts.paginate(page, POSTS_PER_PAGE, False)
+    borrow_records = g.user.borrow_records().paginate(page, RECORDS_PER_PAGE, False)
+    lend_records = g.user.lend_records().paginate(page, RECORDS_PER_PAGE, False)
     return render_template('user.html', 
         user = user,
-        posts = posts)
+        borrow_records = borrow_records,
+        lend_records = lend_records)
 
 @app.route('/edit', methods = ['GET', 'POST'])
 @login_required

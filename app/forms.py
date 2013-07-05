@@ -1,4 +1,4 @@
-from flask.ext.wtf import Form, TextField, BooleanField, TextAreaField, SelectField
+from flask.ext.wtf import Form, TextField, BooleanField, TextAreaField, SelectField, DecimalField, IntegerField
 from flask.ext.wtf import Required, Length
 from app.models import User, Record
 
@@ -27,9 +27,11 @@ class EditForm(Form):
 
 class PostForm(Form):
 	post = TextField('post', validators = [Required()])
+	lender = SelectField('lender', choices=[], coerce=int)
 
 class SearchForm(Form):
 	search = TextField('search', validators = [Required()])
 
 class RecordForm(Form):
-	lender = SelectField('lender', coerce=int)
+	amount = IntegerField('amount', validators = [Required()])
+	lender = SelectField('lender', choices=[], coerce=int)

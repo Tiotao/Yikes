@@ -12,14 +12,17 @@ followers = db.Table('follwers',
 		)
 
 class User(db.Model):
+
 	id = db.Column(db.Integer, primary_key = True)
 	nickname = db.Column(db.String(64), index = True, unique = True)
 	email = db.Column(db.String(120), index = True, unique = True)
 	role = db.Column(db.SmallInteger, default = ROLE_USER)
-	posts = db.relationship('Post', backref = 'author', lazy = 'dynamic')
+	borrow = db.relationship('Record', backref = 'borrows', lazy = 'dynamic', primaryjoin = ('Record.borrower_id == User.id'))
+	lend = db.relationship('Record', backref = 'lends', lazy = 'dynamic', primaryjoin = ('Record.lender_id == User.id'))
 	about_me = db.Column(db.String(140))
 	last_seen = db.Column(db.DateTime)
-	records = db.relationship('Record', backref = 'records', lazy = 'dynamic')
+	#borrow_records = db.relationship('Record', backref = "borrows")
+	#lend_records = db.relationship("Record", backref = db.backref("lends", lazy = 'dynamic'), primaryjoin = ('Record.lender_id == id'), lazy = 'dynamic')
 	followed = db.relationship('User',
 		secondary = followers,
 		primaryjoin = (followers.c.follower_id == id),
@@ -57,12 +60,12 @@ class User(db.Model):
 
 	def followed_posts(self):
 		return Post.query.join(followers, (followers.c.followed_id == Post.user_id)).filter(followers.c.follower_id == self.id).order_by(Post.timestamp.desc())
-	
+
 	def borrow_records(self):
-		return Record.query.filter_by(borrower = self.id).order_by(Record.timestamp.desc())
+		return Record.query.filter_by(borrower_id = self.id).order_by(Record.timestamp.desc())
 
 	def lend_records(self):
-		return Record.query.filter_by(lender = self.id).order_by(Record.timestamp.desc())
+		return Record.query.filter_by(lender_id = self.id).order_by(Record.timestamp.desc())
 
 	def mutual_friends(self):
 		mutual = []
@@ -88,7 +91,6 @@ class User(db.Model):
 		return '<User %r>' % (self.nickname)
 
 class Post(db.Model):
-	__searchable__ = ['body']
 
 	id = db.Column(db.Integer, primary_key = True)
 	body = db.Column(db.String(140))
@@ -98,16 +100,16 @@ class Post(db.Model):
 	def __repr__(self):
 		return '<Post %r>' % (self.body)
 
-
-
-
 class Record(db.Model):
+	__tablename__ = 'record_table'
 	id = db.Column(db.Integer, primary_key = True)
 	amount = db.Column(db.Integer)
 	timestamp = db.Column(db.DateTime)
-	borrower = db.Column(db.Integer, db.ForeignKey('user.id'))
-	lender = db.Column(db.Integer, db.ForeignKey('user.id'))
+	borrower_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+	lender_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+	#db.Column(db.Integer, db.ForeignKey(User.id))
 
 	def __repr__(self):
-		return '<Record %r>' % (self.id)
+		return '<Record %r>' % (self.body)
+
 
