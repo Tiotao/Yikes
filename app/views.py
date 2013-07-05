@@ -1,8 +1,8 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from app import app, db, lm, oid
-from forms import LoginForm, EditForm, PostForm, SearchForm
-from models import User, ROLE_USER, ROLE_ADMIN, Post
+from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
+from models import User, ROLE_USER, ROLE_ADMIN, Post, Record
 from datetime import datetime
 from config import POSTS_PER_PAGE, MAX_SEARCH_RESULTS
 
@@ -13,11 +13,14 @@ def load_user(id):
     return User.query.get(int(id))
 
 @app.route('/', methods = ['GET', 'POST'])
-@app.route('/index', methods = ['GET', 'POST'])
+@app.route('/index', methods records = db.relationship('Record', backref = 'records', lazy = 'dynamic')= ['GET', 'POST'])
 @app.route('/index/<int:page>', methods = ['GET', 'POST'])
 @login_required
 def index(page = 1):
-    form = PostForm()
+    form = RecordForm(request.form)
+    if request.method == 'POST':
+        form.assigned.choices = g.user.mutual_friends()
+
     if form.validate_on_submit():
         post = Post(body = form.post.data, timestamp = datetime.utcnow(), author = g.user)
         db.session.add(post)

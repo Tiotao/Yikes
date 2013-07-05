@@ -19,14 +19,13 @@ class User(db.Model):
 	posts = db.relationship('Post', backref = 'author', lazy = 'dynamic')
 	about_me = db.Column(db.String(140))
 	last_seen = db.Column(db.DateTime)
+	records = db.relationship('Record', backref = 'records', lazy = 'dynamic')
 	followed = db.relationship('User',
 		secondary = followers,
 		primaryjoin = (followers.c.follower_id == id),
 		secondaryjoin = (followers.c.followed_id ==id),
 		backref = db.backref('followers', lazy = 'dynamic'),
 		lazy = 'dynamic')
-
-
 
 	def is_authenticated(self):
 		return True
@@ -59,6 +58,20 @@ class User(db.Model):
 	def followed_posts(self):
 		return Post.query.join(followers, (followers.c.followed_id == Post.user_id)).filter(followers.c.follower_id == self.id).order_by(Post.timestamp.desc())
 	
+	def borrow_records(self):
+		return Record.query.filter_by(borrower = self.id).order_by(Record.timestamp.desc())
+
+	def lend_records(self):
+		return Record.query.filter_by(lender = self.id).order_by(Record.timestamp.desc())
+
+	def mutual_friends(self):
+		mutual = []
+		friends = self.followed
+		for f in friends:
+			if f.is_following(self):
+				mutual.append(f)
+		return mutual
+
 	@staticmethod
 	def make_unique_nickname(nickname):
 		if User.query.filter_by(nickname = nickname).first() == None:
@@ -83,6 +96,18 @@ class Post(db.Model):
 	user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 	def __repr__(self):
-		return '<Post %r>' % (self.text)
+		return '<Post %r>' % (self.body)
 
-whooshalchemy.whoosh_index(app, Post)
+
+
+
+class Record(db.Model):
+	id = db.Column(db.Integer, primary_key = True)
+	amount = db.Column(db.Integer)
+	timestamp = db.Column(db.DateTime)
+	borrower = db.Column(db.Integer, db.ForeignKey('user.id'))
+	lender = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+	def __repr__(self):
+		return '<Record %r>' % (self.id)
+

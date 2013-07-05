@@ -6,13 +6,13 @@
 <h1>Hi, {{g.user.nickname}}!</h1>
 {% include 'flash.html' %}
 <div class="well">
-    <form class="form-horizontal" action="" method="post" name="post">
+    <form class="form-horizontal" action="" method="post" name="lender">
         {{form.hidden_tag()}}
-        <div class="control-group{% if form.errors.post %} error{% endif %}">
-            <label class="control-label" for="post">Say something:</label>
+        <div class="control-group{% if form.errors.lender %} error{% endif %}">
+            <label class="control-label" for="lender">Say sometdhing:</label>
             <div class="controls">
-                {{ form.post(size = 30, maxlength = 140) }}
-                {% for error in form.errors.post %}
+                {{ form.lender }}
+                {% for error in form.errors.lender %}
                     <span class="help-inline">[{{error}}]</span><br>
                 {% endfor %}
             </div>

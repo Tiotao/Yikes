@@ -1,6 +1,6 @@
-from flask.ext.wtf import Form, TextField, BooleanField, TextAreaField
+from flask.ext.wtf import Form, TextField, BooleanField, TextAreaField, SelectField
 from flask.ext.wtf import Required, Length
-from app.models import User
+from app.models import User, Record
 
 class LoginForm(Form):
 	openid = TextField('openid', validators = [Required()])
@@ -30,3 +30,6 @@ class PostForm(Form):
 
 class SearchForm(Form):
 	search = TextField('search', validators = [Required()])
+
+class RecordForm(Form):
+	lender = SelectField('lender', coerce=int)
