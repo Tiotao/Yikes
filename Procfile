@@ -1,2 +1,1 @@
-web: python db_create.py
-web: python run.py
+web: python __init__.py
