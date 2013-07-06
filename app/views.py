@@ -33,7 +33,7 @@ def index(page = 1):
         nodes = temp_group_id
         records = Record.query.all()
         print "aaa", records
-
+        
         edges_record = Record().get_records(temp_group_id)
         print "ddd" , edges_record
         edges = []
@@ -208,4 +208,3 @@ def internal_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('500.html'), 500
-

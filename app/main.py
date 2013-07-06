@@ -4,7 +4,7 @@ import sys
 sys.path.append('..')
 sys.path.append('/usr/lib/graphviz/python/')
 sys.path.append('/usr/lib64/graphviz/python/')
-import gv
+#import gv
 
 # Import pygraph
 from pygraph.classes.graph import graph
@@ -37,10 +37,10 @@ class UpdateRequest(object):
 		
 		#print
 
-		dot = write(self.group)
-		gvv = gv.readstring(dot)
-		gv.layout(gvv,'dot')
-		gv.render(gvv,'png','1.png')
+#		dot = write(self.group)
+#		gvv = gv.readstring(dot)
+#		gv.layout(gvv,'dot')
+#		gv.render(gvv,'png','1.png')
 
 	def update_group(self):
 
