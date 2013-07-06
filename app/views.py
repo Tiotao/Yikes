@@ -5,7 +5,7 @@ from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
 from models import User, ROLE_USER, ROLE_ADMIN, Post, Record
 from datetime import datetime
 from config import RECORDS_PER_PAGE, MAX_SEARCH_RESULTS
-
+from main import UpdateRequest
 
 @lm.user_loader
 
@@ -18,13 +18,44 @@ def load_user(id):
 @login_required
 def index(page = 1):
     form = RecordForm(request.form)
-    friends = sorted([(c.id, c.nickname) for c in g.user.mutual_friends()], key=lambda friend: friend[0])
+    friends = sorted([(c.id, c.nickname) for c in g.user.valid_friends()], key=lambda friend: friend[0])
     form.lender.choices = friends
-    flash(friends)
+    flash(form.lender.data)
 
     if form.validate_on_submit():
-        record = Record(amount = form.amount.data, timestamp = datetime.utcnow(), lender_id = form.lender.data, borrower_id = g.user.id)
-        db.session.add(record)
+        borrower = g.user
+        lender = User().from_id(form.lender.data)
+        temp_group = borrower.mutual_friends(lender)
+        temp_group_id = []
+        for u in temp_group:
+            temp_group_id.append(str(u.id))
+
+        nodes = temp_group_id
+        records = Record.query.all()
+        print "aaa", records
+        
+        edges_record = Record().get_records(temp_group_id)
+        print "ddd" , edges_record
+        edges = []
+        weights = []
+        
+        for r in edges_record:
+            print r
+            edges.append((str(r.borrower_id), str(r.lender_id)))
+            weights.append(r.amount)
+            db.session.delete(r)
+
+        req = UpdateRequest()
+        req.form_graph(nodes, edges, weights)
+        print "edge" , edges
+        print req.group.nodes()
+
+        req.add_record(str(borrower.id), str(lender.id), form.amount.data)
+        
+        new_records = req.all_edges()
+        for rec in new_records:
+            db.session.add(Record(amount = rec[2], timestamp = datetime.utcnow(), lender_id = int(rec[1]), borrower_id = int(rec[0])))
+
         db.session.commit()
         flash('Your record is now live!')
         return redirect(url_for('index'))

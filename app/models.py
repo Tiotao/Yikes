@@ -42,6 +42,14 @@ class User(db.Model):
 	def get_id(self):
 		return unicode(self.id)
 
+	@staticmethod
+	def from_id(id):
+		u = User.query.filter_by(id = id).first()
+		if u == None:
+			return False
+		else:
+			return u 
+
 	def avatar(self, size):
 		return 'http://www.gravatar.com/avatar/' + md5(self.email).hexdigest() + '?d=mm&s=' + str(size)
 
@@ -67,13 +75,23 @@ class User(db.Model):
 	def lend_records(self):
 		return Record.query.filter_by(lender_id = self.id).order_by(Record.timestamp.desc())
 
-	def mutual_friends(self):
-		mutual = []
+	def valid_friends(self):
+		valid = []
 		friends = self.followed
 		for f in friends:
 			if f.is_following(self):
-				mutual.append(f)
-		return mutual
+				valid.append(f)
+		return valid
+	
+	def mutual_friends(self, user):
+		my_friends = self.valid_friends()
+		user_friends = user.valid_friends()
+		mutual_friends = []
+
+		for f in my_friends:
+			if user_friends.count(f) > 0:
+				mutual_friends.append(f)
+		return mutual_friends
 
 	@staticmethod
 	def make_unique_nickname(nickname):
@@ -109,7 +127,21 @@ class Record(db.Model):
 	lender_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 	#db.Column(db.Integer, db.ForeignKey(User.id))
 
+	@staticmethod
+	def get_records(users):
+		all_records = Record.query.all()
+		print "all: " , all_records
+		records = []
+		for x in all_records:
+			print "borrower_id: ", x.borrower_id
+			print "lender_id: ", x.lender_id
+			print "users: ", users.count(x.borrower_id)
+			if users.count(str(x.borrower_id)) > 0 and users.count(str(x.lender_id)) > 0:
+				records.append(x)
+
+		return records 
+
 	def __repr__(self):
-		return '<Record %r>' % (self.body)
+		return '<Record %r>' % (self.amount)
 
 
