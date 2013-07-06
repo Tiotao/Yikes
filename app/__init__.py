@@ -1,11 +1,13 @@
 import os
 from flask.ext.login import LoginManager
 from flask.ext.openid import OpenID
+from flask.ext.heroku import Heroku
 from config import basedir
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+heroku = Heroku(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 lm = LoginManager()
