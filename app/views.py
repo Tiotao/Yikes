@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from app import app, db, lm, oid
 from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
-from models import User, ROLE_USER, ROLE_ADMIN, Post, Record
+from models import User, ROLE_USER, ROLE_ADMIN, Post, Record, History
 from datetime import datetime
 from config import RECORDS_PER_PAGE, MAX_SEARCH_RESULTS
 from main import UpdateRequest
@@ -54,7 +54,9 @@ def index(page = 1):
         
         new_records = req.all_edges()
         for rec in new_records:
-            db.session.add(Record(amount = rec[2], timestamp = datetime.utcnow(), lender_id = int(rec[1]), borrower_id = int(rec[0])))
+            time = datetime.utcnow()
+            db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
+            db.session.add(History(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
 
         db.session.commit()
         flash('Your record is now live!')
@@ -73,6 +75,7 @@ def login():
     if g.user is not None and g.user.is_authenticated():
         return redirect(url_for('index'))
     form = LoginForm()
+    
     if form.validate_on_submit():
         session['remember_me'] = form.remember_me.data
         return oid.try_login(form.openid.data, ask_for = ['nickname', 'email'])
@@ -127,8 +130,8 @@ def user(nickname, page = 1):
     if user == None:
         flash('User ' + nickname +' does not exist!' )
         return redirect(url_for('index'))
-    borrow_records = g.user.borrow_records().paginate(page, RECORDS_PER_PAGE, False)
-    lend_records = g.user.lend_records().paginate(page, RECORDS_PER_PAGE, False)
+    borrow_records = g.user.borrow_history().paginate(page, RECORDS_PER_PAGE, False)
+    lend_records = g.user.lend_history().paginate(page, RECORDS_PER_PAGE, False)
     return render_template('user.html', 
         user = user,
         borrow_records = borrow_records,
@@ -200,6 +203,8 @@ def search_results(query):
     return render_template('search_results.html',
         query = query,
         results = results)
+
+
 
 @app.errorhandler(404)
 def internal_error(error):

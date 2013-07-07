@@ -19,6 +19,8 @@ class User(db.Model):
 	role = db.Column(db.SmallInteger, default = ROLE_USER)
 	borrow = db.relationship('Record', backref = 'borrows', lazy = 'dynamic', primaryjoin = ('Record.borrower_id == User.id'))
 	lend = db.relationship('Record', backref = 'lends', lazy = 'dynamic', primaryjoin = ('Record.lender_id == User.id'))
+	his_borrow = db.relationship('History', backref = 'borrows', lazy = 'dynamic', primaryjoin = ('History.borrower_id == User.id'))
+	his_lend = db.relationship('History', backref = 'lends', lazy = 'dynamic', primaryjoin = ('History.lender_id == User.id'))
 	about_me = db.Column(db.String(140))
 	last_seen = db.Column(db.DateTime)
 	#borrow_records = db.relationship('Record', backref = "borrows")
@@ -74,6 +76,12 @@ class User(db.Model):
 
 	def lend_records(self):
 		return Record.query.filter_by(lender_id = self.id).order_by(Record.timestamp.desc())
+
+	def borrow_history(self):
+		return History.query.filter_by(borrower_id = self.id).order_by(History.timestamp.desc())
+
+	def lend_history(self):
+		return History.query.filter_by(lender_id = self.id).order_by(History.timestamp.desc())
 
 	def valid_friends(self):
 		valid = []
@@ -145,3 +153,28 @@ class Record(db.Model):
 		return '<Record %r>' % (self.amount)
 
 
+class History(db.Model):
+	__tablename__ = 'history_table'
+	id = db.Column(db.Integer, primary_key = True)
+	amount = db.Column(db.Integer)
+	timestamp = db.Column(db.DateTime)
+	borrower_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+	lender_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+	#db.Column(db.Integer, db.ForeignKey(User.id))
+
+	@staticmethod
+	def get_records(users):
+		all_records = History.query.all()
+		print "all: " , all_records
+		records = []
+		for x in all_records:
+			print "borrower_id: ", x.borrower_id
+			print "lender_id: ", x.lender_id
+			print "users: ", users.count(x.borrower_id)
+			if users.count(str(x.borrower_id)) > 0 and users.count(str(x.lender_id)) > 0:
+				records.append(x)
+
+		return records 
+
+	def __repr__(self):
+		return '<History %r>' % (self.amount)

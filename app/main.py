@@ -11,7 +11,7 @@ from pygraph.classes.graph import graph
 from pygraph.classes.digraph import digraph
 from pygraph.algorithms.searching import breadth_first_search
 from pygraph.algorithms.cycles import find_cycle
-from pygraph.readwrite.dot import write
+#from pygraph.readwrite.dot import write
 
 
 class UpdateRequest(object):

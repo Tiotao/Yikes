@@ -3,6 +3,14 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<script>
+    $(window).load(function(){
+        $('#HistoryTab a[href="#borrow"]').tab('show');
+    });
+</script>
+
+
 {% include 'flash.html' %}
 <div class="well well-large" style="height: 140px;">
     <div class="pull-right">
@@ -21,19 +29,60 @@
     {% endif %}
     </p>
 </div>
-{% for record in lend_records.items %}
-    {% include 'record.html' %}
-{% endfor %}
-<ul class="pager">
-    {% if lend_records.has_prev %}
-    <li class="previous"><a href="{{ url_for('user', nickname = user.nickname, page = lend_records.prev_num) }}">Newer Records</a></li>
-    {% else %}
-    <li class="previous disabled"><a href="#">Newer Records</a></li>
-    {% endif %}
-    {% if lend_records.has_next %}
-    <li class="next"><a href="{{ url_for('user', nickname = user.nickname, page = lend_records.next_num) }}">Older Records</a></li>
-    {% else %}
-    <li class="next disabled"><a href="#">Older Records</a></li>
-    {% endif %}
-</ul>
+
+<div id="history-content">
+  <ul class="nav nav-pills" id = "HistoryTab">
+    <li><a class = "active" href = "#borrow">Borrow</a></li>
+    <li><a href = "#lend">Lend</a></li>
+  </ul>
+    <div class = "tab-content">
+        <div class = "tab-pane active" id = "borrow">
+            {% for record in borrow_records.items %}
+                {% include 'record.html' %}
+            {% endfor %}
+
+            <ul class="pager">
+                {% if borrow_records.has_prev %}
+                <li class="previous"><a href="{{ url_for('user', nickname = user.nickname, page = borrow_records.prev_num) }}">Newer History</a></li>
+                {% else %}
+                <li class="previous disabled"><a href="#">Newer History</a></li>
+                {% endif %}
+                {% if borrow_records.has_next %}
+                <li class="next"><a href="{{ url_for('user', nickname = user.nickname, page = borrow_records.next_num) }}">Older History</a></li>
+                {% else %}
+                <li class="next disabled"><a href="#">Older History</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class = "tab-pane" id = "lend">
+            {% for record in lend_records.items %}
+                {% include 'record.html' %}
+            {% endfor %}
+
+            <ul class="pager">
+                {% if lend_records.has_prev %}
+                <li class="previous"><a href="{{ url_for('user', nickname = user.nickname, page = lend_records.prev_num) }}">Newer History</a></li>
+                {% else %}
+                <li class="previous disabled"><a href="#">Newer History</a></li>
+                {% endif %}
+                {% if lend_records.has_next %}
+                <li class="next"><a href="{{ url_for('user', nickname = user.nickname, page = lend_records.next_num) }}">Older History</a></li>
+                {% else %}
+                <li class="next disabled"><a href="#">Older History</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <script>
+
+        $('#HistoryTab a').click(function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        })
+    </script>
+
+</div>
+
+
 {% endblock %}

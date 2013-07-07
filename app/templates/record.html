@@ -1,16 +1,17 @@
 <table class="table table-hover">
     <tr>
-        <td width="70px"><a href="{{url_for('user', nickname = record.borrows.nickname)}}"><img src="{{record.borrows.avatar(70)}}" /></a></td>
-        <td>
-            <p><a href="{{url_for('user', nickname = record.borrows.nickname)}}">{{record.borrows.nickname}}</a> borrowed
-
-            {{record.amount}}
-
-            RMB from 
-
-            <a href="{{url_for('user', nickname = record.lends.nickname)}}">{{record.lends.nickname}}</a> 
-
-             {{record.timestamp}}</p>
+        <td width="70px"><a href="{{url_for('user', nickname = record.borrows.nickname)}}"><img src="{{record.borrows.avatar(70)}}" /></a>
+        </td>
+        <td valign = "middle">
+            <a href="{{url_for('user', nickname = record.borrows.nickname)}}">{{record.borrows.nickname}}</a> 向
+            <a href="{{url_for('user', nickname = record.lends.nickname)}}">{{record.lends.nickname}}</a> 借了
+            <b> {{record.amount}} </b>  RMB 
+            <p class="muted"><small>{{record.timestamp}}</small></p>
         </td>
     </tr>
+    <tr>
+         
+    </tr>
 </table>
+
+
