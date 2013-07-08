@@ -10,7 +10,6 @@ Flask-WhooshAlchemy==0.55a
 Jinja2==2.7
 Mako==0.7.3
 MarkupSafe==0.15
-PAM==0.4.2
 Pillow==2.0.0
 SQLAlchemy==0.7.9
 Tempita==0.5.1
