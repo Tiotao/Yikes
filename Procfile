@@ -1,1 +1,3 @@
-web: gunicorn -w 4 -b "0.0.0.0:$PORT" run:app
+web: gunicorn run:app
+init: python db_create.py && pybabel compile -d app/translations
+upgrade: python db_upgrade.py && pybabel compile -d app/translationss
