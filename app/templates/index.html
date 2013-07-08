@@ -12,8 +12,15 @@
 
 
 <h1>Hi, {{g.user.nickname}}!</h1>
+
+
+
 {% include 'flash.html' %}
 <div class="well">
+    <form class="form-horizontal" action="" method="post">
+        <input class="btn btn-primary" name="scan" type="submit" value="Scan">
+    </form>
+    
     <form class="form-horizontal" action="" method="post" name="amount">
         {{form.hidden_tag()}}
         <div class="control-group{% if form.errors.amount %} error{% endif %}">

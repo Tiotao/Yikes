@@ -6,6 +6,7 @@ from models import User, ROLE_USER, ROLE_ADMIN, Post, Record, History
 from datetime import datetime
 from config import RECORDS_PER_PAGE, MAX_SEARCH_RESULTS
 from main import UpdateRequest
+from qrtools import QR
 
 @lm.user_loader
 
@@ -22,6 +23,11 @@ def index(page = 1):
     form.lender.choices = friends
     flash(form.lender.data)
     time = datetime.utcnow()
+
+    
+    if request.form.get('scan', None) == 'Scan':
+        myCode = QR()
+        flash(myCode.decode_webcam())
 
     if form.validate_on_submit():
         borrower = g.user
