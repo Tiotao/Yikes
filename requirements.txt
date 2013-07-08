@@ -26,5 +26,5 @@ python-openid==2.2.5
 pytz==2013b
 speaklater==1.3
 sqlalchemy-migrate==0.7.2
-python-qrtools
+./path/to/distribution/qr-tools
 zbar
