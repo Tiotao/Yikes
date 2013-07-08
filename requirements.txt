@@ -19,16 +19,6 @@ Whoosh==2.5.0
 flask-heroku==0.1.4
 flup
 gunicorn==17.5
-pydot==1.0.28
-pygobject==3.8.0
-pygpgme==0.3
-pyinotify==0.9.3
-pyparsing==1.5.7
-pyserial==2.6
-pysmbc==1.0.13
-python-apt==0.8.8ubuntu6
-python-dateutil==1.5
-python-debian==0.1.21-nmu2ubuntu1
 python-graph-core==1.8.2
 python-graph-dot==1.8.2
 python-openid==2.2.5
