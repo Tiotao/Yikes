@@ -21,10 +21,14 @@ def index(page = 1):
     friends = sorted([(c.id, c.nickname) for c in g.user.valid_friends()], key=lambda friend: friend[0])
     form.lender.choices = friends
     flash(form.lender.data)
+    time = datetime.utcnow()
 
     if form.validate_on_submit():
         borrower = g.user
         lender = User().from_id(form.lender.data)
+
+        db.session.add(History(amount = form.amount.data, timestamp = time, lender_id = form.lender.data, borrower_id = borrower.id))
+
         temp_group = borrower.mutual_friends(lender)
         temp_group_id = []
         for u in temp_group:
@@ -54,9 +58,9 @@ def index(page = 1):
         
         new_records = req.all_edges()
         for rec in new_records:
-            time = datetime.utcnow()
+            
             db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
-            db.session.add(History(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
+            
 
         db.session.commit()
         flash('Your record is now live!')
@@ -75,7 +79,7 @@ def login():
     if g.user is not None and g.user.is_authenticated():
         return redirect(url_for('index'))
     form = LoginForm()
-    
+
     if form.validate_on_submit():
         session['remember_me'] = form.remember_me.data
         return oid.try_login(form.openid.data, ask_for = ['nickname', 'email'])

@@ -6,7 +6,7 @@ setup(name='Yikes',
       author='Yiwen',
       author_email='evan@tiotao.info',
       url='tiotao.info',
-      install_requires=['Flask>=0.7.2', 'MarkupSafe', 'flask-login', 'flask-openid', 'flask-sqlalchemy<=0.7.9', 'sqlalchemy-migrate', 'flask-whooshalchemy', 'flask-wtf', 'flask-babel', 'flup'],
+      install_requires=['Flask>=0.7.2', 'SQLAlchemy <= 0.7.9', 'pygraph' ,'MarkupSafe', 'flask-login', 'flask-openid', 'flask-sqlalchemy', 'sqlalchemy-migrate', 'flask-whooshalchemy', 'flask-wtf', 'flask-babel', 'flup'],
      )
      
      
