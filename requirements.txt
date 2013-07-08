@@ -20,7 +20,6 @@ flask-heroku==0.1.4
 flup
 gunicorn==17.5
 python-graph-core==1.8.2
-python-graph-dot==1.8.2
 python-openid==2.2.5
 pytz==2013b
 sqlalchemy-migrate==0.7.2
