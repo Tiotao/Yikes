@@ -7,7 +7,7 @@ Flask-OpenID==1.1.1
 Flask-SQLAlchemy==0.16
 Flask-WTF==0.8.3
 Flask-WhooshAlchemy==0.55a
-GnuPGInterface==0.3.2
+GnuPGInterface
 Jinja2==2.7
 Mako==0.7.3
 MarkupSafe==0.15
