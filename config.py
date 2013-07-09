@@ -11,7 +11,7 @@ SQLALCHEMY_RECORD_QUERIES = True
 WHOOSH_BASE = os.path.join(basedir, 'search.db')
 
 CSRF_ENABLED = True
-SECRET_KEY = 'klsd920612'
+SECRET_KEY = 'you-will-never-guess'
 WHOOSH_BASE = os.path.join(basedir, 'search.db')
 RECORDS_PER_PAGE = 3
 MAX_SEARCH_RESULTS = 50
