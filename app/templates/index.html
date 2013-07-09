@@ -13,8 +13,6 @@
 
 <h1>Hi, {{g.user.nickname}}!</h1>
 
-<input type="file" accept="video/*" capture="camera">
-
 {% include 'flash.html' %}
 <div class="well">
     <form class="form-horizontal" action="" method="post">
@@ -42,10 +40,13 @@
     </form>
 </div>
 
+
+
 <div id="records-content">
+<h1><small>Currently...</small></h1>
   <ul class="nav nav-pills" id = "RecordsTab">
-    <li><a class = "active" href = "#borrow">Borrow</a></li>
-    <li><a href = "#lend">Lend</a></li>
+    <li><a class = "active" href = "#borrow">You owe others</a></li>
+    <li><a href = "#lend">Others owe you</a></li>
   </ul>
     <div class = "tab-content">
         <div class = "tab-pane active" id = "borrow">

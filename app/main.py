@@ -4,14 +4,14 @@ import sys
 sys.path.append('..')
 sys.path.append('/usr/lib/graphviz/python/')
 sys.path.append('/usr/lib64/graphviz/python/')
-#import gv
+
 
 # Import pygraph
 from pygraph.classes.graph import graph
 from pygraph.classes.digraph import digraph
 from pygraph.algorithms.searching import breadth_first_search
 from pygraph.algorithms.cycles import find_cycle
-#from pygraph.readwrite.dot import write
+
 
 
 class UpdateRequest(object):
@@ -35,12 +35,6 @@ class UpdateRequest(object):
 			for i in range(0, len(weights)):
 				self.group.add_edge(edges[i], wt=weights[i])
 		
-		#print
-
-#		dot = write(self.group)
-#		gvv = gv.readstring(dot)
-#		gv.layout(gvv,'dot')
-#		gv.render(gvv,'png','1.png')
 
 	def update_group(self):
 
@@ -96,10 +90,6 @@ class UpdateRequest(object):
 
 			self.add_record(str(t[0][0]), str(t[-1][1]), w)
 
-			
-
-
-
 		else:
 			#find min weight
 			for i in range(0, len(cycle)):
@@ -127,11 +117,6 @@ class UpdateRequest(object):
 
 			return True
 
-
-#		for e in self.group.edges():
-#			print "edge: ", str(e), ", weight: ", self.group.edge_weight(e)
-
-			#print
 
 		dot = write(self.group)
 		gvv = gv.readstring(dot)
@@ -170,20 +155,6 @@ class UpdateRequest(object):
 			print "y"
 
 
-
-#r = UpdateRequest()
-
-#nodes = ["Tong Yuxiang", "Zhang Yiwen", "Hu Yike", "Chen Minqi", "Mandy Lee"]
-#edges = [("Tong Yuxiang", "Zhang Yiwen"),("Zhang Yiwen", "Hu Yike"),("Hu Yike", "Tong Yuxiang"),("Tong Yuxiang", "Mandy Lee"),("Hu Yike", "Mandy Lee"),("Zhang Yiwen", "Chen Minqi"),("Chen Minqi", "Tong Yuxiang")]
-#weights = [200, 100, 100, 500, 120, 100, 20]
-
-
-
-#r.form_graph(nodes, edges, weights)
-
-#r.all_edges()
-
-#r.add_record("Tong Yuxiang", "Hu Yike", 200)
 
 
 

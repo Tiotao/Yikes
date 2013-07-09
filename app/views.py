@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from app import app, db, lm, oid
 from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
-from models import User, ROLE_USER, ROLE_ADMIN, Post, Record, History
+from models import User, ROLE_USER, ROLE_ADMIN, FriendRequest, Record, History
 from datetime import datetime
 from config import RECORDS_PER_PAGE, MAX_SEARCH_RESULTS
 from main import UpdateRequest
@@ -21,17 +21,15 @@ def index(page = 1):
     form = RecordForm(request.form)
     friends = sorted([(c.id, c.nickname) for c in g.user.valid_friends()], key=lambda friend: friend[0])
     form.lender.choices = friends
-    flash(form.lender.data)
     time = datetime.utcnow()
-
-    
-
     if form.validate_on_submit():
         borrower = g.user
         lender = User().from_id(form.lender.data)
 
+        #add history record in database
         db.session.add(History(amount = form.amount.data, timestamp = time, lender_id = form.lender.data, borrower_id = borrower.id))
 
+        #store mutual friends in temp_group => nodes
         temp_group = borrower.mutual_friends(lender)
         temp_group_id = []
         for u in temp_group:
@@ -39,8 +37,8 @@ def index(page = 1):
 
         nodes = temp_group_id
         records = Record.query.all()
-        print "aaa", records
-        
+
+        #store related records in edges
         edges_record = Record().get_records(temp_group_id)
         print "ddd" , edges_record
         edges = []
@@ -50,24 +48,26 @@ def index(page = 1):
             print r
             edges.append((str(r.borrower_id), str(r.lender_id)))
             weights.append(r.amount)
+            #delete existing records
             db.session.delete(r)
 
+        #create graph model from edges and nodes
         req = UpdateRequest()
         req.form_graph(nodes, edges, weights)
-        print "edge" , edges
-        print req.group.nodes()
-
+        
+        #add new record into graph model
         req.add_record(str(borrower.id), str(lender.id), form.amount.data)
         
+        #export edges from graph model
         new_records = req.all_edges()
-        for rec in new_records:
-            
+        for rec in new_records:    
+            #re-organize current record in database
             db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
-            
-
+        
         db.session.commit()
         flash('Your record is now live!')
         return redirect(url_for('index'))
+    #borrow records and lend records
     borrow_records = g.user.borrow_records().paginate(page, RECORDS_PER_PAGE, False)
     lend_records = g.user.lend_records().paginate(page, RECORDS_PER_PAGE, False)
     return render_template("index.html",
@@ -139,10 +139,31 @@ def user(nickname, page = 1):
         return redirect(url_for('index'))
     borrow_records = g.user.borrow_history().paginate(page, RECORDS_PER_PAGE, False)
     lend_records = g.user.lend_history().paginate(page, RECORDS_PER_PAGE, False)
+    incoming_requests = g.user.incoming_requests().paginate(page, RECORDS_PER_PAGE, False)
+    number_req = g.user.incoming_requests().count()
+
     return render_template('user.html', 
         user = user,
         borrow_records = borrow_records,
-        lend_records = lend_records)
+        lend_records = lend_records,
+        incoming_requests = incoming_requests,
+        number_req = number_req)
+
+@app.route('/user/<nickname>/friends')
+@login_required
+def friends(nickname, page = 1):
+    friends = User.query.filter_by(nickname = nickname).first().valid_friends()
+    return render_template('friends.html', friends = friends)
+
+@app.route('/ignore_response/<id>')
+@login_required
+def ignore_response(id):
+    req = FriendRequest.query.filter_by(id = id).first()
+    sender = User().from_id(req.sender_id)
+    nickname = g.user.nickname
+    db.session.delete(req)
+    db.session.commit()
+    return redirect(url_for('user', nickname = nickname))
 
 @app.route('/edit', methods = ['GET', 'POST'])
 @login_required
@@ -195,6 +216,8 @@ def unfollow(nickname):
     db.session.commit()
     flash('You have stopped following ' + nickname + '.')
     return redirect(url_for('user', nickname = nickname))
+
+
 
 @app.route('/search', methods = ['POST'])
 @login_required
