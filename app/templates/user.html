@@ -19,7 +19,7 @@
     <h1>{{user.nickname}}</h1>
     {% if user.about_me %}<p>{{user.about_me}}</p>{% endif %}
     {% if user.last_seen %}<p><em>Last seen on: {{user.last_seen}}</em></p>{% endif %}
-    <p><a href = "{{url_for('friends', nickname = user.nickname)}}">Friends: </a> |
+    <p><a href = "{{url_for('friends', nickname = user.nickname)}}">Friends: {{user.valid_friends_number() - 1}}</a> |
     {% if user.id == g.user.id %}
         <a href="{{url_for('edit')}}">Edit your profile</a>
     {% elif not g.user.is_following(user) %}
