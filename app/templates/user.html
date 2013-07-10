@@ -8,6 +8,10 @@
     $(window).load(function(){
         $('#HistoryTab a[href="#borrow"]').tab('show');
     });
+
+    $(window).load(function(){
+        $('#SocialTab a[href="#friends"]').tab('show');
+    });
 </script>
 
 
@@ -19,7 +23,7 @@
     <h1>{{user.nickname}}</h1>
     {% if user.about_me %}<p>{{user.about_me}}</p>{% endif %}
     {% if user.last_seen %}<p><em>Last seen on: {{user.last_seen}}</em></p>{% endif %}
-    <p><a href = "{{url_for('friends', nickname = user.nickname)}}">Friends: {{user.valid_friends_number() - 1}}</a> |
+    <p><a href = "#">Friends: {{user.valid_friends_number() - 1}}</a> |
     {% if user.id == g.user.id %}
         <a href="{{url_for('edit')}}">Edit your profile</a>
     {% elif not g.user.is_following(user) %}
@@ -30,18 +34,64 @@
     </p>
 </div>
 
-<h1><small>History</small></h1>
+<div class="accordion" id="accordion2">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
+        <h1><small>Social</small></h1>
+      </a>
+    </div>
+    <div id="collapseOne" class="accordion-body collapse in">
+      <div class="accordion-inner">
+        <div id="social-content">
+          <ul class="nav nav-pills" id = "SocialTab">
+            <li><a class = "active" href = "#friends">Friends</a></li>
+            <li><a href = "#incoming">Request 
+                {% if number_req > 0 %}
+                <span class="badge badge-warning">{{number_req}}</span>
+                {% endif %}
+                </a>
+                </li>
+          </ul>
+            <div class = "tab-content">
+                <div class = "tab-pane active" id = "friends">
+                    {% include 'friends.html' %}
+                </div>
+                <div class = "tab-pane" id = "incoming">
+                    {% for request in incoming_requests.items %}
+                        {% include 'request.html' %}
+                    {% endfor %}
 
-<div id="history-content">
+                    <ul class="pager">
+                        {% if incoming_requests.has_prev %}
+                        <li class="previous"><a href="{{ url_for('user', nickname = user.nickname, page = incoming_requests.prev_num) }}">Newer Request</a></li>
+                        {% else %}
+                        <li class="previous disabled"><a href="#">Newer Request</a></li>
+                        {% endif %}
+                        {% if incoming_requests.has_next %}
+                        <li class="next"><a href="{{ url_for('user', nickname = user.nickname, page = incoming_requests.next_num) }}">Older Requests</a></li>
+                        {% else %}
+                        <li class="next disabled"><a href="#">Older Requests</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+        <h1><small>History</small></h1>
+      </a>
+    </div>
+    <div id="collapseTwo" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <div id="history-content">
   <ul class="nav nav-pills" id = "HistoryTab">
     <li><a class = "active" href = "#borrow">Borrow</a></li>
     <li><a href = "#lend">Lend</a></li>
-    <li><a href = "#incoming">Incoming Request 
-        {% if number_req > 0 %}
-        <span class="badge badge-warning">{{number_req}}</span>
-        {% endif %}
-        </a>
-        </li>
   </ul>
     <div class = "tab-content">
         <div class = "tab-pane active" id = "borrow">
@@ -80,24 +130,6 @@
                 {% endif %}
             </ul>
         </div>
-        <div class = "tab-pane" id = "incoming">
-            {% for request in incoming_requests.items %}
-                {% include 'request.html' %}
-            {% endfor %}
-
-            <ul class="pager">
-                {% if incoming_requests.has_prev %}
-                <li class="previous"><a href="{{ url_for('user', nickname = user.nickname, page = incoming_requests.prev_num) }}">Newer Request</a></li>
-                {% else %}
-                <li class="previous disabled"><a href="#">Newer Request</a></li>
-                {% endif %}
-                {% if incoming_requests.has_next %}
-                <li class="next"><a href="{{ url_for('user', nickname = user.nickname, page = incoming_requests.next_num) }}">Older Requests</a></li>
-                {% else %}
-                <li class="next disabled"><a href="#">Older Requests</a></li>
-                {% endif %}
-            </ul>
-        </div>
     </div>
 
     <script>
@@ -106,9 +138,22 @@
             e.preventDefault();
             $(this).tab('show');
         })
+
+        $('#SocialTab a').click(function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        })
     </script>
 
 </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
 
 
 {% endblock %}

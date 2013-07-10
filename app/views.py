@@ -141,19 +141,17 @@ def user(nickname, page = 1):
     lend_records = g.user.lend_history().paginate(page, RECORDS_PER_PAGE, False)
     incoming_requests = g.user.incoming_requests().paginate(page, RECORDS_PER_PAGE, False)
     number_req = g.user.incoming_requests().count()
+    friends = User.query.filter_by(nickname = nickname).first().valid_friends()
 
     return render_template('user.html', 
         user = user,
         borrow_records = borrow_records,
         lend_records = lend_records,
         incoming_requests = incoming_requests,
-        number_req = number_req)
+        number_req = number_req,
+        friends = friends)
 
-@app.route('/user/<nickname>/friends')
-@login_required
-def friends(nickname, page = 1):
-    friends = User.query.filter_by(nickname = nickname).first().valid_friends()
-    return render_template('friends.html', friends = friends)
+
 
 @app.route('/ignore_response/<id>')
 @login_required

@@ -1,11 +1,5 @@
 
-{% extends "base.html" %}
-
-{% block content %}
-
     {% for friend in friends %}
-
-
         <table class="table table-hover">
             <tr>
                 <td valign = "middle" width="50px"><a href="{{url_for('user', nickname = friend.nickname)}}"><img src="{{friend.avatar(50)}}" /></a>
@@ -18,9 +12,4 @@
                  
             </tr>
         </table>
-
     {% endfor %}
-
-
-
-{% endblock %}
