@@ -40,12 +40,10 @@ def index(page = 1):
 
         #store related records in edges
         edges_record = Record().get_records(temp_group_id)
-        print "ddd" , edges_record
         edges = []
         weights = []
         
         for r in edges_record:
-            print r
             edges.append((str(r.borrower_id), str(r.lender_id)))
             weights.append(r.amount)
             #delete existing records
@@ -68,8 +66,8 @@ def index(page = 1):
         flash('Your record is now live!')
         return redirect(url_for('index'))
     #borrow records and lend records
-    borrow_records = g.user.borrow_records().paginate(page, RECORDS_PER_PAGE, False)
-    lend_records = g.user.lend_records().paginate(page, RECORDS_PER_PAGE, False)
+    borrow_records = g.user.borrow_records()#.paginate(page, RECORDS_PER_PAGE, False)
+    lend_records = g.user.lend_records()#.paginate(page, RECORDS_PER_PAGE, False)
     return render_template("index.html",
         title = 'Home',
         form = form,
@@ -129,26 +127,56 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route('/user/<nickname>')
-@app.route('/user/<nickname>/<int:page>')
+@app.route('/social', methods= ['GET', 'POST'])
+@login_required
+def social():
+    friends = User.query.filter_by(nickname = g.user.nickname).first().valid_friends()
+    form = SearchForm(request.form)
+    if form.validate_on_submit():
+        nickname = form.search.data
+        results = User.query.filter_by(nickname=nickname)
+        count=results.count()
+        return render_template('social.html', friends=friends, form=form, results=results, results_count=count)
+    return render_template('social.html', friends=friends, form=form, results=None, results_count=-1)
+
+
+@app.route('/notice', methods= ['GET', 'POST'])
+@login_required
+def notice():
+    incoming_requests = g.user.incoming_requests()#.paginate(page, RECORDS_PER_PAGE, False)
+    number_req = g.user.incoming_requests().count()
+    return render_template('notice.html', incoming_requests = incoming_requests,
+        number_req = number_req)
+
+@app.route('/user/<nickname>', methods = ['GET', 'POST'])
+@app.route('/user/<nickname>/<int:page>', methods = ['GET', 'POST'])
 @login_required
 def user(nickname, page = 1):
     user = User.query.filter_by(nickname = nickname).first()
     if user == None:
         flash('User ' + nickname +' does not exist!' )
         return redirect(url_for('index'))
-    borrow_records = g.user.borrow_history().paginate(page, RECORDS_PER_PAGE, False)
-    lend_records = g.user.lend_history().paginate(page, RECORDS_PER_PAGE, False)
-    incoming_requests = g.user.incoming_requests().paginate(page, RECORDS_PER_PAGE, False)
-    number_req = g.user.incoming_requests().count()
+    borrow_records = g.user.borrow_history()#.paginate(page, RECORDS_PER_PAGE, False)
+    lend_records = g.user.lend_history()#.paginate(page, RECORDS_PER_PAGE, False)
     friends = User.query.filter_by(nickname = nickname).first().valid_friends()
 
-    return render_template('user.html', 
+    form = EditForm(g.user.nickname)
+    if form.validate_on_submit():
+        g.user.nickname = form.nickname.data
+        g.user.about_me = form.about_me.data
+        db.session.add(g.user)
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('user', nickname = nickname))
+    else:
+        form.nickname.data = g.user.nickname
+        form.about_me.data = g.user.about_me
+
+    return render_template('user.html',
+        form = form,
         user = user,
         borrow_records = borrow_records,
         lend_records = lend_records,
-        incoming_requests = incoming_requests,
-        number_req = number_req,
         friends = friends)
 
 
@@ -163,7 +191,7 @@ def ignore_response(id):
     db.session.commit()
     return redirect(url_for('user', nickname = nickname))
 
-@app.route('/edit', methods = ['GET', 'POST'])
+"""@app.route('/edit', methods = ['GET', 'POST'])
 @login_required
 def edit():
     form = EditForm(g.user.nickname)
@@ -177,7 +205,7 @@ def edit():
     else:
         form.nickname.data = g.user.nickname
         form.about_me.data = g.user.about_me
-        return render_template('edit.html', form = form)
+        return render_template('edit.html', form = form)"""
 
 @app.route('/follow/<nickname>')
 def follow(nickname):

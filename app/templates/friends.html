@@ -1,15 +1,26 @@
 
-    {% for friend in friends %}
-        <table class="table table-hover">
-            <tr>
-                <td valign = "middle" width="50px"><a href="{{url_for('user', nickname = friend.nickname)}}"><img src="{{friend.avatar(50)}}" /></a>
+
+    
+<table width=100% style="border:none">
+    <tr>
+        <td valign = "middle" width="50px"><a href="{{url_for('user', nickname = friend.nickname)}}"><img src="{{friend.avatar(50)}}" /></a>
                 </td>
                 <td valign = "middle">
-                    <a href="{{url_for('user', nickname = friend.nickname)}}">{{friend.nickname}}
+                    <a href="{{url_for('user', nickname = friend.nickname)}}">{{friend.nickname}}</a>
                 </td>
-            </tr>
-            <tr>
+                <td valign = "middle" align="right">
+                    {% if not g.user.is_valid_friend(friend) %}
+                        {% if g.user.is_following(friend) %}
+                            <i style="color:#666" class="icon-plus-sign-alt"> 等待对方回复</i>
+                        {% else %}
+                            <a href="{{url_for('follow', nickname = friend.nickname)}}"><i class="icon-plus-sign-alt"></i> 发送搅基申请</a>
+                        {% endif %}
                  
-            </tr>
-        </table>
-    {% endfor %}
+                    {% endif %}
+                </td>
+        </tr>
+
+</table>
+
+
+

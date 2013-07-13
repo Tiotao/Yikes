@@ -13,6 +13,9 @@ lm.setup_app(app)
 lm.login_view = 'login'
 oid = OpenID(app, os.path.join(basedir, 'tmp'))
 
+from momentjs import momentjs
+app.jinja_env.globals['momentjs'] = momentjs
+
 from app import views, models
 
 

@@ -1,0 +1,96 @@
+
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row" style="background-color:white;">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <h1>我的基友</h1>
+                <h6 class="subheader">此处可通过用户名查找新基友，也可查看自己已有的基友。</h6>
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-12 columns">
+                    <form action="" method="post" name="amount">
+                        {{form.hidden_tag()}}
+                        <div class="row collapse" style="width:20em; margin-top:1em">
+                            <div class="small-12 columns">
+                                <div class="small-9 columns{% if form.errors.search %} error{% endif %}">
+                                    {{ form.search(size = 30, maxlength = 140) }}
+                                    {% for error in form.errors.search %}
+                                        <small>{{error}}</small>
+                                    {% endfor %}
+                                </div>
+                                <div class="small-3 columns">
+                                    <input class="button prefix" style="border: none; margin-left: 1em; background: #FF005C; " type="submit" value="找">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not results == None %}
+<div class="row" style="background-color:#333;">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                <i class="icon-search icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">找到的基友</span></i></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                {% if results_count == 0 %}
+                <p style="color:white">找不到好基友</p>
+                {% else %}
+                    {% for friend in results %}
+                        {% include 'friends.html' %}
+                    {% endfor %}
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+
+{% endif %}
+
+<div class="row" style="background-color:#FF005C;">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                <i class="icon-heart icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">好基友 ({{g.user.valid_friends_number() - 1}})</span></i></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                {% for friend in friends %}
+                    {% if not friend.nickname == g.user.nickname %}
+                        {% include 'friends.html' %}
+                    {% endif %}
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" style="background-color:#00ADFF;">
+    <div class="small-10 small-centered columns">
+       
+    </div>
+</div>
+
+{% endblock %}

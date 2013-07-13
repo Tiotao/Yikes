@@ -1,0 +1,16 @@
+
+
+
+<table width="100%" style="border:none">
+    <tr>
+        <td valign = "middle" width="50px"><a href="{{url_for('user', nickname = record.lends.nickname)}}"><img src="{{record.lends.avatar(50)}}" /></a>
+        </td>
+        <td valign = "middle">
+            <a href="{{url_for('user', nickname = record.borrows.nickname)}}">{{record.lends.nickname}}</a> 借了你
+            <i class="icon-yen"> <b> {{record.amount}}</b> </i>  
+        </td>
+        <td align="right" valign="bottom">
+            <span style="color:#666; font-size:0.3em"><i class="icon-time"> {{momentjs(record.timestamp).calendar()}} </i></span>
+        </td>
+    </tr>
+</table>

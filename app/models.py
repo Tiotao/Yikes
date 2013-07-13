@@ -137,7 +137,13 @@ class User(db.Model):
 			if f.is_following(self):
 				valid.append(f)
 		return valid
-		
+	
+	def is_valid_friend(self, user):
+		if user.is_following(self) and self.is_following(user):
+			return True
+		else:
+			return False
+
 	#return number of valid friends
 	def valid_friends_number(self):
 		valid = []

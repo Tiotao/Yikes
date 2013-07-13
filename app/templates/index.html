@@ -4,96 +4,118 @@
 
 {% block content %}
 
-<script>
-    $(window).load(function(){
-        $('#RecordsTab a[href="#borrow"]').tab('show');
-    });
-</script>
-
-
-<h1>Hi, {{g.user.nickname}}!</h1>
-
-{% include 'flash.html' %}
-<div class="well">
-    <form class="form-horizontal" action="" method="post">
-    </form>
-    
-    <form class="form-horizontal" action="" method="post" name="amount">
-        {{form.hidden_tag()}}
-        <div class="control-group{% if form.errors.amount %} error{% endif %}">
-            <label class="control-label" for="amount">From:</label>
-            <div class="controls">
-                {{ form.lender }}
-                 borrow 
-                {{ form.amount(size = 30, maxlength = 140) }}
-                RMB
-                {% for error in form.errors.amount %}
-                    <span class="help-inline">[{{error}}]</span><br>
-                {% endfor %}
+<div class="row" style="background-color:white;">
+    <div class="small-10 small-centered columns"><h1 style="margin-bottom: 0em">Hi, {{g.user.nickname}}!</h1></div>
+</div>
+<div class="row">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-8 columns">
+                <div class="standard-content"> 
+                    <h5 style="color:#444"><a href="{{ url_for('user', nickname = g.user.nickname) }}" style="color:#444"><i class="icon-home icon-large"></i>
+                     个人信息
+                    </a>
+                    </h5>
+                    <p style="color:#444">阅览您的个人资料、借还款历史及基友</p>
+                    <h5 style="color:#444"><a href="{{ url_for('social') }}" style="color:#444"><i class="icon-heart icon-large"></i>
+                     我的基友</a>
+                    </h5>
+                    <p style="color:#444">成功添加了新的基友后及能向他们借钱了！</p>
+                    <h5 style="color:#444"><a href="{{ url_for('notice') }}" style="color:#444"><i class="icon-envelope icon-large"></i>
+                     通知中心</a>
+                    </h5>
+                    <p style="color:#444">查看最新搅基申请，只有通过对方的申请对方才能向你借钱哦！</p>
+                </div>
+            </div>
+            <div class="small-4 columns" style="background-color: white">
+                <div class="standard-content"> 
+                    <form action="" method="post" name="amount">
+                        {{form.hidden_tag()}}
+                        <div class="row">
+                            <div class="small-12 columns">
+                                <h5 style="color:#fc0">你要翻谁的牌子呢？</h5>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="small-12 columns">
+                                {{ form.lender }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="small-12 columns">
+                                <h5 style="color:#fc0">要问TA借多少钱呢？</h5> 
+                            </div>
+                        </div>
+                        <div class="row collapse">
+                            <div class="small-12 columns {% if form.errors.amount %} error{% endif %}">
+                                <div class="small-9 columns">
+                                    {{ form.amount(size = 30, maxlength = 140) }}
+                                    {% for error in form.errors.amount %}
+                                        <small>{{error}}</small>
+                                    {% endfor %}
+                                </div>
+                                <div class="small-3 columns">
+                                    <span class="postfix radius">.00 软妹币</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="small-12 columns">
+                                <input class="button" style="background: #fc0; margin-top: 0.5em;" type="submit" value="好的">
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-        <div class="control-group">
-            <div class="controls">
-                <input class="btn btn-primary" type="submit" value="Borrow!">
-            </div>
-        </div>
-    </form>
+        
+       
+    </div>
 </div>
 
-
-
-<div id="records-content">
-<h1><small>Currently...</small></h1>
-  <ul class="nav nav-pills" id = "RecordsTab">
-    <li><a class = "active" href = "#borrow">You owe others</a></li>
-    <li><a href = "#lend">Others owe you</a></li>
-  </ul>
-    <div class = "tab-content">
-        <div class = "tab-pane active" id = "borrow">
-            {% for record in borrow_records.items %}
-                {% include 'record.html' %}
-            {% endfor %}
-
-            <ul class="pager">
-                {% if borrow_records.has_prev %}
-                <li class="previous"><a href="{{ url_for('index', page = borrow_records.prev_num) }}">Newer Records</a></li>
-                {% else %}
-                <li class="previous disabled"><a href="#">Newer Records</a></li>
-                {% endif %}
-                {% if borrow_records.has_next %}
-                <li class="next"><a href="{{ url_for('index', page = borrow_records.next_num) }}">Older Records</a></li>
-                {% else %}
-                <li class="next disabled"><a href="#">Older Records</a></li>
-                {% endif %}
-            </ul>
+<div class="row" style="background-color:#fc0;">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                <i class="icon-circle-arrow-down icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">这些钱不还会死</span></i></div>
+            </div>
         </div>
-        <div class = "tab-pane" id = "lend">
-            {% for record in lend_records.items %}
-                {% include 'record.html' %}
-            {% endfor %}
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                    {% for record in borrow_records %}
+                        {% include 'record_borrow.html' %}
+                    {% endfor %}
 
-            <ul class="pager">
-                {% if lend_records.has_prev %}
-                <li class="previous"><a href="{{ url_for('index', page = lend_records.prev_num) }}">Newer Records</a></li>
-                {% else %}
-                <li class="previous disabled"><a href="#">Newer Records</a></li>
-                {% endif %}
-                {% if lend_records.has_next %}
-                <li class="next"><a href="{{ url_for('index', page = lend_records.next_num) }}">Older Records</a></li>
-                {% else %}
-                <li class="next disabled"><a href="#">Older Records</a></li>
-                {% endif %}
-            </ul>
+                </div>
+            </div>
         </div>
     </div>
-    <script>
-
-        $('#RecordsTab a').click(function (e) {
-            e.preventDefault();
-            $(this).tab('show');
-        })
-    </script>
 </div>
+
+<div class="row" style="background-color:#00ADFF;">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                <i class="icon-circle-arrow-up icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">这些钱你再也别想见到了</span></i></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                {% for record in lend_records %}
+                        {% include 'record_lend.html' %}
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
 
 

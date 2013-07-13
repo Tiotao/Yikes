@@ -4,6 +4,132 @@
 
 {% block content %}
 
+<div id="edit" class="reveal-modal small">
+    {% include 'edit.html' %}
+</div>
+
+
+<div class="row" style="background-color:white;">
+    <div class="small-10 small-centered columns"><h1 style="margin-bottom: 0em">{{user.nickname}}</h1></div>
+</div>
+<div class="row">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-8 columns">
+                <div class="standard-content"> 
+                    <h5 style="color:#444">
+                    关于我:
+                    </h5>
+                    <p style="color:#444">{% if user.about_me %}{{user.about_me}}{% else %}暂无{% endif %}</p>
+                    <h5 style="color:#444">
+                    基友:
+                    </h5>
+                    <p style="color:#444">{{user.valid_friends_number() - 1}}</p>
+                    {% if user.id == g.user.id %}
+                    <a href="#" data-reveal-id="edit"><i class="icon-edit-sign"></i> 修改个人资料</a>
+                    {% else %}
+                        {% if not g.user.is_valid_friend(user) %}
+                            {% if g.user.is_following(user) %}
+                                <i style="color:#666" class="icon-plus-sign-alt"> 等待对方回复</i>
+                            {% else %}
+                                <a href="{{url_for('follow', nickname = friend.nickname)}}"><i class="icon-plus-sign-alt"></i> 发送搅基申请</a>
+                            {% endif %}
+                        {% else %}
+                            <i style="color:#333" class="icon-heart"></i> 已有染</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="small-4 columns" style="background-color: white">
+                <div class="standard-content"> 
+                    <img align="right"src="{{user.avatar(120)}}" />
+                </div>
+            </div>
+        </div>
+        
+       
+    </div>
+</div>
+
+{% if user.id == g.user.id %}
+
+<div class="row" style="background-color:#eee;">
+    <div class="small-10 small-centered columns">
+    <div class="standard-content"> 
+        <div class="row">
+            <div class="small-12 columns">
+                <i class="icon-book icon-4x" style="color:#333;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">历史记录</span></i>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-6 columns">
+                <div class="row">
+                    <div class="small-12 columns">
+                        <div class="standard-content"> 
+                        <i class="icon-circle-arrow-down icon-2x" style="color:#333;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">负债</span></i></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="small-12 columns">
+                        <div class="standard-content"> 
+                            {% for record in borrow_records %}
+                                {% include 'history_borrow.html' %}
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="small-6 columns">
+                <div class="row">
+                    <div class="small-12 columns">
+                        <div class="standard-content"> 
+                        <i class="icon-circle-arrow-up icon-2x" style="color:#333;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">借出</span></i></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="small-12 columns">
+                        <div class="standard-content"> 
+                        {% for record in lend_records %}
+                                {% include 'history_lend.html' %}
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+{% endif %}
+
+<div class="row" style="background-color:#aaa;">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                <i class="icon-heart icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">好基友 ({{g.user.valid_friends_number() - 1}})</span></i></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                {% for friend in friends %}
+                    {% if not friend.nickname == g.user.nickname %}
+                        {% include 'friends.html' %}
+                    {% endif %}
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
 <script>
     $(window).load(function(){
         $('#HistoryTab a[href="#borrow"]').tab('show');
@@ -16,143 +142,6 @@
 
 
 {% include 'flash.html' %}
-<div class="well well-large" style="height: 140px;">
-    <div class="pull-right">
-        <img src="{{user.avatar(128)}}" class="img-polaroid">
-    </div>
-    <h1>{{user.nickname}}</h1>
-    {% if user.about_me %}<p>{{user.about_me}}</p>{% endif %}
-    {% if user.last_seen %}<p><em>Last seen on: {{user.last_seen}}</em></p>{% endif %}
-    <p><a href = "#">Friends: {{user.valid_friends_number() - 1}}</a> |
-    {% if user.id == g.user.id %}
-        <a href="{{url_for('edit')}}">Edit your profile</a>
-    {% elif not g.user.is_following(user) %}
-        <a href="{{url_for('follow', nickname = user.nickname)}}">Follow</a>
-    {% else %}
-        <a href="{{url_for('unfollow', nickname = user.nickname)}}">Unfollow</a>
-    {% endif %}
-    </p>
-</div>
-
-<div class="accordion" id="accordion2">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
-        <h1><small>Social</small></h1>
-      </a>
-    </div>
-    <div id="collapseOne" class="accordion-body collapse in">
-      <div class="accordion-inner">
-        <div id="social-content">
-          <ul class="nav nav-pills" id = "SocialTab">
-            <li><a class = "active" href = "#friends">Friends</a></li>
-            <li><a href = "#incoming">Request 
-                {% if number_req > 0 %}
-                <span class="badge badge-warning">{{number_req}}</span>
-                {% endif %}
-                </a>
-                </li>
-          </ul>
-            <div class = "tab-content">
-                <div class = "tab-pane active" id = "friends">
-                    {% include 'friends.html' %}
-                </div>
-                <div class = "tab-pane" id = "incoming">
-                    {% for request in incoming_requests.items %}
-                        {% include 'request.html' %}
-                    {% endfor %}
-
-                    <ul class="pager">
-                        {% if incoming_requests.has_prev %}
-                        <li class="previous"><a href="{{ url_for('user', nickname = user.nickname, page = incoming_requests.prev_num) }}">Newer Request</a></li>
-                        {% else %}
-                        <li class="previous disabled"><a href="#">Newer Request</a></li>
-                        {% endif %}
-                        {% if incoming_requests.has_next %}
-                        <li class="next"><a href="{{ url_for('user', nickname = user.nickname, page = incoming_requests.next_num) }}">Older Requests</a></li>
-                        {% else %}
-                        <li class="next disabled"><a href="#">Older Requests</a></li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
-        <h1><small>History</small></h1>
-      </a>
-    </div>
-    <div id="collapseTwo" class="accordion-body collapse">
-      <div class="accordion-inner">
-        <div id="history-content">
-  <ul class="nav nav-pills" id = "HistoryTab">
-    <li><a class = "active" href = "#borrow">Borrow</a></li>
-    <li><a href = "#lend">Lend</a></li>
-  </ul>
-    <div class = "tab-content">
-        <div class = "tab-pane active" id = "borrow">
-            {% for record in borrow_records.items %}
-                {% include 'record.html' %}
-            {% endfor %}
-
-            <ul class="pager">
-                {% if borrow_records.has_prev %}
-                <li class="previous"><a href="{{ url_for('user', nickname = user.nickname, page = borrow_records.prev_num) }}">Newer History</a></li>
-                {% else %}
-                <li class="previous disabled"><a href="#">Newer History</a></li>
-                {% endif %}
-                {% if borrow_records.has_next %}
-                <li class="next"><a href="{{ url_for('user', nickname = user.nickname, page = borrow_records.next_num) }}">Older History</a></li>
-                {% else %}
-                <li class="next disabled"><a href="#">Older History</a></li>
-                {% endif %}
-            </ul>
-        </div>
-        <div class = "tab-pane" id = "lend">
-            {% for record in lend_records.items %}
-                {% include 'record.html' %}
-            {% endfor %}
-
-            <ul class="pager">
-                {% if lend_records.has_prev %}
-                <li class="previous"><a href="{{ url_for('user', nickname = user.nickname, page = lend_records.prev_num) }}">Newer History</a></li>
-                {% else %}
-                <li class="previous disabled"><a href="#">Newer History</a></li>
-                {% endif %}
-                {% if lend_records.has_next %}
-                <li class="next"><a href="{{ url_for('user', nickname = user.nickname, page = lend_records.next_num) }}">Older History</a></li>
-                {% else %}
-                <li class="next disabled"><a href="#">Older History</a></li>
-                {% endif %}
-            </ul>
-        </div>
-    </div>
-
-    <script>
-
-        $('#HistoryTab a').click(function (e) {
-            e.preventDefault();
-            $(this).tab('show');
-        })
-
-        $('#SocialTab a').click(function (e) {
-            e.preventDefault();
-            $(this).tab('show');
-        })
-    </script>
-
-</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
 
 
 

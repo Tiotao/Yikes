@@ -18,36 +18,66 @@ function set_openid(openid, pr)
 </script>
 {% include 'flash.html' %}
 <div class="well">
-    <h3>Please Sign In</h3>
-    <form class="form" action="" method="post" name="login">
-        {{form.hidden_tag()}}
-        <div class="help-block">Click on your OpenID provider below:</div>
-        <div class="control-group">
-            {% for pr in providers %}
-            <a href="javascript:set_openid('{{pr.url}}', '{{pr.name}}');"><img src="/static/img/{{pr.name.lower()}}.png" class="img-polaroid" style="margin:2px;" /></a>
-            {% endfor %}
-        </div>
-        <div class="control-group{% if form.errors.openid %} error{% endif %}">
-            <label class="control-label" for="openid">Or enter your OpenID here:</label>
-            <div class="controls">
-                {{ form.openid(size = 80, class = "span4") }}
-                {% for error in form.errors.openid %}
-                    <span class="help-inline">[{{error}}]</span><br>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox" for="remember_me">
-                    {{ form.remember_me }} Remember Me
-                </label>
-            </div>
-        </div>
-        <div class="control-group">
-            <div class="controls">
-                <input class="btn btn-primary" type="submit" value="Sign In">
-            </div>
-        </div>
-    </form>
+    
 </div>
+
+
+<div class="row" style="background-color:white; margin-bottom:0.5em; padding-top:5em">
+    <div class="small-10 small-centered columns">
+        <div class="standard-content">
+        <div class="row">
+            <div class="large-8 small-12 columns">
+                <h1>欢迎光临<span style="color:#fc0"> 一刻！</span></h1>
+                <p style="color:#999">娘炮：你欠我钱？<br> 我：我什么时候欠你钱了？<br> 娘炮：上次吃饭前是我付的，100块！<br>我：这样啊……那我给你……<br>娘炮：别给我了，直接给胖子吧，我上次向他借了100去嫖娼。<br>我：等等！胖子也问我借了100去嫖娼，我们三个是不是清了？<br>娘炮：……<p>
+                <h6>何必如此麻烦？让「一刻」帮你解决烦恼！</h6>
+                <h6>只需录入借出借入款项，我们自动帮您整理！</h6>
+            </div>
+            <div class="large-4 small-12 columns" style="border-left:1px solid #eee">
+                <h3>请登录</h3>
+                    <form class="form" action="" method="post" name="login">
+                    {{form.hidden_tag()}}
+                    <h6 class="subheader">通过以下账号登陆：</h6>
+                    <div class="row">
+                        {% for pr in providers %}
+                        <div class="small-6 columns">
+                        <a href="javascript:set_openid('{{pr.url}}', '{{pr.name}}');"><img src="/static/img/{{pr.name.lower()}}.png" class="img-polaroid" style="margin:2px;" /></a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="row">
+                        <div class="small-12 columns{% if form.errors.openid %} error{% endif %}">
+                            <h6 class="subheader">或在此输入您的OpenID账号：</h6>
+                                {{ form.openid(size = 80, class = "span4") }}
+                                {% for error in form.errors.openid %}
+                                    <small>{{error}}</small>
+                                {% endfor %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="small-12 columns">
+                            <label class="checkbox" for="remember_me">
+                                {{ form.remember_me }} Remember Me
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="small-12 columns">
+                            <input class="button" style="background: #fc0; margin-top: 0.5em;" type="submit" value="登陆">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row" style="background-color:#00ADFF;">
+    <div class="small-10 small-centered columns">
+        
+    </div>
+</div>
+
+
 {% endblock %}

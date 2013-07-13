@@ -1,0 +1,45 @@
+
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row" style="background-color:white; margin-bottom:0.5em">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <h1>通知中心</h1>
+                <h6 class="subheader">此处可查看和处理最新的搅基申请。通过申请即可与对方成为基友，互相借钱。</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row" style="background-color:#00ADFF;">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                <i class="icon-comments icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">搅基申请 
+                {% if number_req > 0 %}
+                    ({{number_req}})
+                {% endif %}</span></i></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-12 columns">
+                <div class="standard-content"> 
+                    {% for request in incoming_requests %}
+                        {% include 'request.html' %}
+                    {% endfor %}
+                    {% if number_req == 0 %}
+                        <p style="color:white">暂无搅基申请</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
