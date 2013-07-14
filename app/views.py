@@ -20,7 +20,13 @@ def load_user(id):
 def index(page = 1):
     form = RecordForm(request.form)
     friends = sorted([(c.id, c.nickname) for c in g.user.valid_friends()], key=lambda friend: friend[0])
-    form.lender.choices = friends
+    valid =[]
+    
+    for f in friends:
+        if not int(f[0]) == int(g.user.id):
+            valid.append(f)
+
+    form.lender.choices = valid
     time = datetime.utcnow()
     if form.validate_on_submit():
         borrower = g.user
