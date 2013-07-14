@@ -10,7 +10,7 @@
 <div class="row">
     <div class="small-10 small-centered columns">
         <div class="row">
-            <div class="small-8 columns">
+            <div class="small-12 large-8 columns">
                 <div class="standard-content"> 
                     <h5 style="color:#444"><a href="{{ url_for('user', nickname = g.user.nickname) }}" style="color:#444"><i class="icon-home icon-large"></i>
                      个人信息
@@ -27,7 +27,7 @@
                     <p style="color:#444">查看最新搅基申请，只有通过对方的申请对方才能向你借钱哦！</p>
                 </div>
             </div>
-            <div class="small-4 columns" style="background-color: white">
+            <div class="small-12 large-4 columns" style="background-color: white">
                 <div class="standard-content"> 
                     <form action="" method="post" name="amount">
                         {{form.hidden_tag()}}
@@ -78,7 +78,7 @@
         <div class="row">
             <div class="small-12 columns">
                 <div class="standard-content"> 
-                <i class="icon-circle-arrow-down icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">这些钱不还会死</span></i></div>
+                <i class="icon-circle-arrow-down icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">负债</span></i></div>
             </div>
         </div>
         <div class="row">
@@ -99,7 +99,7 @@
         <div class="row">
             <div class="small-12 columns">
                 <div class="standard-content"> 
-                <i class="icon-circle-arrow-up icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">这些钱你再也别想见到了</span></i></div>
+                <i class="icon-circle-arrow-up icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">借出</span></i></div>
             </div>
         </div>
         <div class="row">
