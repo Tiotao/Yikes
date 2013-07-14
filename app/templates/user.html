@@ -110,14 +110,14 @@
         <div class="row">
             <div class="small-12 columns">
                 <div class="standard-content"> 
-                <i class="icon-heart icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">好基友 ({{g.user.valid_friends_number() - 1}})</span></i></div>
+                <i class="icon-heart icon-4x" style="color:white;"><span style="font-size:0.5em; display:inline-block; vertical-align:middle; padding-left:0.5em; margin-top:-0.5em">好基友 ({{user.valid_friends_number() - 1}})</span></i></div>
             </div>
         </div>
         <div class="row">
             <div class="small-12 columns">
                 <div class="standard-content"> 
                 {% for friend in friends %}
-                    {% if not friend.nickname == g.user.nickname %}
+                    {% if not friend.nickname == user.nickname %}
                         {% include 'friends.html' %}
                     {% endif %}
                 {% endfor %}

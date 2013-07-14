@@ -17,7 +17,6 @@
                     <form action="" method="post" name="amount">
                         {{form.hidden_tag()}}
                         <div class="row" style="width:20em; margin-top:1em">
-                            <div class="small-12 columns">
                                 <div class="small-12 large-9 columns{% if form.errors.search %} error{% endif %}">
                                     {{ form.search(size = 30, maxlength = 140) }}
                                     {% for error in form.errors.search %}
@@ -27,7 +26,6 @@
                                 <div class="small-6 large-3 columns">
                                     <input class="button prefix" style="border: none; background: #FF005C; " type="submit" value="找">
                                 </div>
-                            </div>
                         </div>
                     </form>
             </div>
