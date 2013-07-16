@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from app import app, db, lm, oid
+from app import app, db, lm, oid, oauth, facebook
 from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
 from models import User, ROLE_USER, ROLE_ADMIN, FriendRequest, Record, History
 from datetime import datetime
@@ -21,7 +21,7 @@ def index(page = 1):
     form = RecordForm(request.form)
     friends = sorted([(c.id, c.nickname) for c in g.user.valid_friends()], key=lambda friend: friend[0])
     valid =[]
-    
+
     for f in friends:
         if not int(f[0]) == int(g.user.id):
             valid.append(f)
@@ -80,6 +80,8 @@ def index(page = 1):
         borrow_records = borrow_records,
         lend_records = lend_records,)
 
+
+#oid
 @app.route('/login', methods = ['GET', 'POST'])
 @oid.loginhandler
 def login():
@@ -94,7 +96,6 @@ def login():
         title = 'Sign In',
         form = form,
         providers = app.config['OPENID_PROVIDERS'])
-
 
 @oid.after_login
 def after_login(resp):
@@ -118,6 +119,61 @@ def after_login(resp):
         session.pop('remember_me', None)
     login_user(user, remember = remember_me)
     return redirect(request.args.get('next') or url_for('index'))
+
+
+#oauth for FACEBOOK
+@app.route('/login/facebook')
+def login_facebook():
+    return facebook.authorize(callback=url_for('facebook_callback',
+        next=request.args.get('next') or request.referrer or None,
+        _external=True))
+
+
+@app.route('/facebook_callback')
+@facebook.authorized_handler
+def facebook_callback(resp):
+    next_url = request.args.get('next') or url_for('index')
+    if resp is None:
+        flash('You denied the login')
+        return redirect(next_url)
+
+    session['fb_access_token'] = (resp['access_token'], '')
+
+    me = facebook.get('/me')
+    user = Users.query.filter_by(fb_id=me.data['id']).first()
+    
+    if user is None:
+        fb_id = me.data['id']
+        
+        if me.data['username']:
+            fb_username = me.data['username']
+        else:
+            fb_username = me.data['name']
+
+        fb_email = me.data['email']
+
+        user = Users(nickname = fb_username, email = fb_email, role = ROLE_USER)
+        user.fb_id = me.data['id']
+        db.session.add(user)
+        db.session.commit()
+        db.session.add(user.follow(user))
+        db.session.commit()
+
+    remember_me = False
+    if 'remember_me' in session:
+        remember_me = session['remember_me']
+        session.pop('remember_me', None)
+    login_user(user, remember = remember_me)
+
+    flash('You are now logged in as %s' % user.username)
+    return redirect(url_for('index'))
+
+@facebook.tokengetter
+def get_facebook_oauth_token():
+    return session.get('fb_access_token')   
+
+
+
 
 @app.before_request
 def before_request():
@@ -197,21 +253,6 @@ def ignore_response(id):
     db.session.commit()
     return redirect(url_for('user', nickname = nickname))
 
-"""@app.route('/edit', methods = ['GET', 'POST'])
-@login_required
-def edit():
-    form = EditForm(g.user.nickname)
-    if form.validate_on_submit():
-        g.user.nickname = form.nickname.data
-        g.user.about_me = form.about_me.data
-        db.session.add(g.user)
-        db.session.commit()
-        flash('Your changes have been saved.')
-        return redirect(url_for('edit'))
-    else:
-        form.nickname.data = g.user.nickname
-        form.about_me.data = g.user.about_me
-        return render_template('edit.html', form = form)"""
 
 @app.route('/follow/<nickname>')
 def follow(nickname):
