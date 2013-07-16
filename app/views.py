@@ -121,6 +121,7 @@ def after_login(resp):
 
 #oauth for TWITTER
 
+@twitter.tokengetter
 def get_twitter_token():
     """This is used by the API to look for the auth token and secret
     it should use for API calls.  During the authorization handshake
@@ -166,7 +167,7 @@ def oauth_authorized(resp):
 
     # user never signed on
     if user is None:
-        user = Users(nickname = resp['screen_name'], role = ROLE_USER)
+        user = User(nickname = resp['screen_name'], role = ROLE_USER)
         db_session.add(user)
         db.session.commit()
         db.session.add(user.follow(user))
