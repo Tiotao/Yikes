@@ -200,17 +200,18 @@ def login_facebook():
 @app.route('/facebook_callback')
 @facebook.authorized_handler
 def facebook_callback(resp):
-    print "ye"
+
     next_url = request.args.get('next') or url_for('index')
-    print "ye"
+
     if resp is None or 'access_token' not in resp:
         flash('You denied the login')
         return redirect(next_url)
-    print "ye"
+
     session['fb_access_token'] = (resp['access_token'], '')
 
     me = facebook.get('/me')
-    user = Users.query.filter_by(fb_id=me.data['id']).first()
+    user = User.query.filter_by(email=me.data['email']).first()
+    print user
     
     if user is None:
         fb_id = me.data['id']
@@ -229,12 +230,16 @@ def facebook_callback(resp):
         db.session.commit()
 
     remember_me = False
+    
     if 'remember_me' in session:
         remember_me = session['remember_me']
         session.pop('remember_me', None)
+    
     login_user(user, remember = remember_me)
+    
+    print user.email
 
-    flash('You are now logged in as %s' % user.username)
+    flash('You are now logged in as %s' % user.nickname)
     return redirect(url_for('index'))
 
 @facebook.tokengetter
