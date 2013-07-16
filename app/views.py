@@ -202,10 +202,11 @@ def login_facebook():
 def facebook_callback(resp):
     print "ye"
     next_url = request.args.get('next') or url_for('index')
+    print "ye"
     if resp is None or 'access_token' not in resp:
         flash('You denied the login')
         return redirect(next_url)
-
+    print "ye"
     session['fb_access_token'] = (resp['access_token'], '')
 
     me = facebook.get('/me')
