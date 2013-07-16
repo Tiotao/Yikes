@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from app import app, db, lm, oid, oauth, facebook
+from app import app, db, lm, oid, oauth, facebook, twitter
 from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
 from models import User, ROLE_USER, ROLE_ADMIN, FriendRequest, Record, History
 from datetime import datetime
@@ -9,7 +9,6 @@ from main import UpdateRequest
 
 
 @lm.user_loader
-
 def load_user(id):
     return User.query.get(int(id))
 
@@ -120,6 +119,76 @@ def after_login(resp):
     login_user(user, remember = remember_me)
     return redirect(request.args.get('next') or url_for('index'))
 
+#oauth for TWITTER
+
+def get_twitter_token():
+    """This is used by the API to look for the auth token and secret
+    it should use for API calls.  During the authorization handshake
+    a temporary set of token and secret is used, but afterwards this
+    function has to return the token and secret.  If you don't want
+    to store this in the database, consider putting it into the
+    session instead.
+    """
+    return session.get('tw_oauth_token'), session.get('tw_oauth_secret')
+    
+
+@app.route('/login/twitter')
+def login_twitter():
+    """Calling into authorize will cause the OpenID auth machinery to kick
+    in.  When all worked out as expected, the remote application will
+    redirect back to the callback URL provided.
+    """
+    return twitter.authorize(callback=url_for('oauth_authorized',
+        next=request.args.get('next') or request.referrer or None))
+
+@app.route('/oauth-authorized')
+@twitter.authorized_handler
+def oauth_authorized(resp):
+    """Called after authorization.  After this function finished handling,
+    the OAuth information is removed from the session again.  When this
+    happened, the tokengetter from above is used to retrieve the oauth
+    token and secret.
+
+    Because the remote application could have re-authorized the application
+    it is necessary to update the values in the database.
+
+    If the application redirected back after denying, the response passed
+    to the function will be `None`.  Otherwise a dictionary with the values
+    the application submitted.  Note that Twitter itself does not really
+    redirect back unless the user clicks on the application name.
+    """
+    next_url = request.args.get('next') or url_for('index')
+    if resp is None:
+        flash(u'You denied the request to sign in.')
+        return redirect(next_url)
+
+    user = User.query.filter_by(nickname=resp['screen_name']).first()
+
+    # user never signed on
+    if user is None:
+        user = Users(nickname = resp['screen_name'], role = ROLE_USER)
+        db_session.add(user)
+        db.session.commit()
+        db.session.add(user.follow(user))
+        db.session.commit()
+
+    # in any case we update the authenciation token in the db
+    # In case the user temporarily revoked access we will have
+    # new tokens here.
+    session['tw_oauth_token'] = resp['oauth_token']
+    session['tw_oauth_secret'] = resp['oauth_token_secret']
+
+    remember_me = False
+    if 'remember_me' in session:
+        remember_me = session['remember_me']
+        session.pop('remember_me', None)
+    login_user(user, remember = remember_me)
+
+    flash('You were signed in')
+
+    return redirect(next_url)
+
+
 
 #oauth for FACEBOOK
 @app.route('/login/facebook')
@@ -128,12 +197,12 @@ def login_facebook():
         next=request.args.get('next') or request.referrer or None,
         _external=True))
 
-
 @app.route('/facebook_callback')
 @facebook.authorized_handler
 def facebook_callback(resp):
+    print "ye"
     next_url = request.args.get('next') or url_for('index')
-    if resp is None:
+    if resp is None or 'access_token' not in resp:
         flash('You denied the login')
         return redirect(next_url)
 
@@ -153,7 +222,6 @@ def facebook_callback(resp):
         fb_email = me.data['email']
 
         user = Users(nickname = fb_username, email = fb_email, role = ROLE_USER)
-        user.fb_id = me.data['id']
         db.session.add(user)
         db.session.commit()
         db.session.add(user.follow(user))
@@ -171,8 +239,6 @@ def facebook_callback(resp):
 @facebook.tokengetter
 def get_facebook_oauth_token():
     return session.get('fb_access_token')   
-
-
 
 
 @app.before_request
