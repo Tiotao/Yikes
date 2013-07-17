@@ -30,5 +30,14 @@ facebook = oauth.remote_app('facebook',
     request_token_params={'scope': 'email'}
 )
 
+from weibo import APIClient
+
+APP_KEY = '3525956681'            # app key
+APP_SECRET = 'a26ea31dc385ed540b8f141f91087734'      # app secret
+CALLBACK_URL = '/weibo_callback'  # callback url
+
+client = APIClient(app_key=APP_KEY, app_secret=APP_SECRET,
+                   redirect_uri=CALLBACK_URL)
+url = client.get_authorize_url()    # redirect the user to `url'
 
 from app import views, models

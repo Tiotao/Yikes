@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from app import app, db, lm, oid, oauth, facebook
+from app import app, db, lm, oid, oauth, facebook, client, url
 from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
 from models import User, ROLE_USER, ROLE_ADMIN, FriendRequest, Record, History
 from datetime import datetime
@@ -119,6 +119,56 @@ def after_login(resp):
     login_user(user, remember = remember_me)
     return redirect(request.args.get('next') or url_for('index'))
 
+#oauth for WEIBO
+@app.route('/login/weibo')
+def login_weibo():
+    return redirect(url)
+
+
+@app.route('/weibo_callback', methods = ['GET', 'POST'])
+def weibo_callback():
+    code = request.args.get('code')
+    r = client.request_access_token(code)
+    access_token = r.access_token
+    expires_in = r.expires_in 
+    session['wb_access_token'] = access_token
+    session['wb_expires_in'] = expires_in
+    client.set_access_token(access_token, expires_in)
+
+    next_url = request.args.get('next') or url_for('index')
+
+    if r is None or r.access_token is None:
+        flash('You denied the login')
+        return redirect(next_url)
+
+    uid = client.account.get_uid.get()['uid']
+    email = client.account.profile.email.get()['email']
+
+    user = User.query.filter_by(email=email).first()
+    print user
+    
+    if user is None:
+        weibo_user = client.users.show.get(uid=uid)
+        user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER)
+        db.session.add(user)
+        db.session.commit()
+        db.session.add(user.follow(user))
+        db.session.commit()
+        client.statuses.update.post(status=u'test oauth2.0')
+
+    remember_me = False
+    
+    if 'remember_me' in session:
+        remember_me = session['remember_me']
+        session.pop('remember_me', None)
+    
+    login_user(user, remember = remember_me)
+    
+    print user.email
+
+    flash('You are now logged in as %s' % user.nickname)
+    return redirect(url_for('index'))
+
 #oauth for FACEBOOK
 @app.route('/login/facebook')
 def login_facebook():
@@ -152,7 +202,7 @@ def facebook_callback(resp):
 
         fb_email = me.data['email']
 
-        user = Users(nickname = fb_username, email = fb_email, role = ROLE_USER)
+        user = User(nickname = fb_username, email = fb_email, role = ROLE_USER)
         db.session.add(user)
         db.session.commit()
         db.session.add(user.follow(user))
