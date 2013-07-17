@@ -32,7 +32,7 @@
                             {% if g.user.is_following(user) %}
                                 <i style="color:#666" class="icon-plus-sign-alt"> 等待对方回复</i>
                             {% else %}
-                                <a href="{{url_for('follow', nickname = friend.nickname)}}"><i class="icon-plus-sign-alt"></i> 发送搅基申请</a>
+                                <a href="{{url_for('follow', nickname = user.nickname)}}"><i class="icon-plus-sign-alt"></i> 发送搅基申请</a>
                             {% endif %}
                         {% else %}
                             <i style="color:#333" class="icon-heart"></i> 已有染</a>
@@ -127,18 +127,6 @@
     </div>
 </div>
 
-
-
-
-<script>
-    $(window).load(function(){
-        $('#HistoryTab a[href="#borrow"]').tab('show');
-    });
-
-    $(window).load(function(){
-        $('#SocialTab a[href="#friends"]').tab('show');
-    });
-</script>
 
 
 {% include 'flash.html' %}
