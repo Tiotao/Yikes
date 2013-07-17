@@ -81,13 +81,13 @@ class User(db.Model):
 
 	#get user's avatar
 	def avatar(self, size):
-		if weibo_id:
-			return weibo_img
-		elif facebook_id:
-			return 'https://graph.facebook.com/' + str(facebook_id) + '/picture?width=' + str(size) + '&height=' + str(size)
-		elif renren_id:
+		if self.weibo_id:
+			return weibo_img + '?width=' + str(size) + '&height=' + str(size)
+		elif self.facebook_id:
+			return 'https://graph.facebook.com/' + str(self.facebook_id) + '/picture?width=' + str(size) + '&height=' + str(size)
+		elif self.renren_id:
 			pass
-		elif alipay_id:
+		elif self.alipay_id:
 			pass
 		else:
 			return 'http://www.gravatar.com/avatar/' + md5(self.email).hexdigest() + '?d=mm&s=' + str(size)
