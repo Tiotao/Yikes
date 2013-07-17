@@ -17,8 +17,41 @@ function set_openid(openid, pr)
 }
 </script>
 {% include 'flash.html' %}
-<div class="well">
-    
+
+
+<div id="openid_login" class="reveal-modal small">
+    <form class="form" action="" method="post" name="login">
+        {{form.hidden_tag()}}
+        <h6 class="subheader">通过以下账号登录：</h6>
+        <div class="row">
+            {% for pr in providers %}
+            <div class="small-6 columns">
+            <a href="javascript:set_openid('{{pr.url}}', '{{pr.name}}');"><img src="/static/img/{{pr.name.lower()}}.png" class="img-polaroid" style="margin:2px;" /></a>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="row">
+            <div class="small-12 columns{% if form.errors.openid %} error{% endif %}">
+                <h6 class="subheader">或在此输入您的OpenID账号：</h6>
+                    {{ form.openid(size = 80, class = "span4") }}
+                    {% for error in form.errors.openid %}
+                        <small>{{error}}</small>
+                    {% endfor %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-12 columns">
+                <label class="checkbox" for="remember_me">
+                    {{ form.remember_me }} Remember Me
+                </label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="small-12 columns">
+                <input class="button" style="background: #fc0; margin-top: 0.5em;" type="submit" value="登陆">
+            </div>
+        </div>
+    </form>
 </div>
 
 
@@ -33,39 +66,12 @@ function set_openid(openid, pr)
                 <h6>只需录入借出借入款项，我们自动帮您整理！</h6>
             </div>
             <div class="large-4 small-12 columns" style="border-left:1px solid #eee">
+                <div class="standard-content">
                 <h3>请登录</h3>
-                    <form class="form" action="" method="post" name="login">
-                    {{form.hidden_tag()}}
-                    <h6 class="subheader">通过以下账号登陆：</h6>
-                    <div class="row">
-                        {% for pr in providers %}
-                        <div class="small-6 columns">
-                        <a href="javascript:set_openid('{{pr.url}}', '{{pr.name}}');"><img src="/static/img/{{pr.name.lower()}}.png" class="img-polaroid" style="margin:2px;" /></a>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <div class="row">
-                        <div class="small-12 columns{% if form.errors.openid %} error{% endif %}">
-                            <h6 class="subheader">或在此输入您的OpenID账号：</h6>
-                                {{ form.openid(size = 80, class = "span4") }}
-                                {% for error in form.errors.openid %}
-                                    <small>{{error}}</small>
-                                {% endfor %}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="small-12 columns">
-                            <label class="checkbox" for="remember_me">
-                                {{ form.remember_me }} Remember Me
-                            </label>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="small-12 columns">
-                            <input class="button" style="background: #fc0; margin-top: 0.5em;" type="submit" value="登陆">
-                        </div>
-                    </div>
-                </form>
+                    <a href="#" class="button" style="background: #fc0; margin-top: 0.5em;" data-reveal-id="openid_login"><i class="icon-google-plus-sign"></i>  OpenID登录</a><br>
+                    <a class="button" style="background: #fc0; margin-top: 0.5em;" href="/login/facebook"><i class="icon-facebook-sign"></i>  Facebook登录</a><br>
+                    <a class="button" style="background: #fc0; margin-top: 0.5em;" href="/login/weibo"><i class="icon-weibo"></i>  新浪微博登录</a>
+                </div>
             </div>
         </div>
         </div>
@@ -73,12 +79,6 @@ function set_openid(openid, pr)
 </div>
 
 
-<div class="row" style="background-color:#00ADFF;">
-    <div class="small-10 small-centered columns">
-        <a href="/login/facebook">Login with Facebook</a>
-        <a href="/login/weibo">Login with Sina Weibo</a>
-    </div>
-</div>
 
 
 {% endblock %}

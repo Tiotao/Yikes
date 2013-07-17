@@ -38,7 +38,7 @@
         <li class="divider"></li>
         <li><a href="{{ url_for('user', nickname = g.user.nickname) }}">个人信息</a></li>
         <li class="divider"></li>
-        <li><a href="{{ url_for('social') }}">我的基友</a></li>
+        <li><a href="{{ url_for('social') }}">我的好友</a></li>
         <li class="divider"></li>
         <li><a href="{{ url_for('notice') }}">通知中心</a></li>
         <li class="divider"></li>
@@ -52,7 +52,7 @@
                   <a href="{{ url_for('user', nickname = g.user.nickname) }}"> <i class="icon-home"></i> 个人信息</a>
                 </li>
                 <li>
-                  <a href="{{ url_for('social') }}"><i class="icon-heart"></i> 我的基友</a>
+                  <a href="{{ url_for('social') }}"><i class="icon-heart"></i> 我的好友</a>
                 </li>
                 <li>
                   <a href="{{ url_for('notice') }}"><i class="icon-envelope"></i> 通知中心</a>
@@ -92,4 +92,11 @@
     $(document).foundation();
   </script>
   </body>
+  <footer>
+  <div class="top-bar" style="background:#000;margin-bottom: 0em">
+  <div style="text-align:right; margin-right: 0.5em">
+    <small style="color: #fff"><i class="icon-cloud"></i>  Written by Tiotao, inspired by Yike and Gary, 2013</small>
+  </div>
+  </div>
+  </footer>
 </html>
