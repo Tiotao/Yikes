@@ -142,14 +142,16 @@ def weibo_callback():
         return redirect(next_url)
 
     uid = client.account.get_uid.get()['uid']
-    weibo_user = client.users.show.get(uid=uid)
+    email = str(uid),'@example.com'
     print uid
-    user = User.query.filter_by(nickname=weibo_user['screen_name']).first()
+    print email
+
+    user = User.query.filter_by(email=email).first()
     print user
     
     if user is None:
         weibo_user = client.users.show.get(uid=uid)
-        user = User(nickname = weibo_user['screen_name'], role = ROLE_USER)
+        user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER)
         db.session.add(user)
         db.session.commit()
         db.session.add(user.follow(user))
