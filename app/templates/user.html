@@ -22,7 +22,7 @@
                     </h5>
                     <p style="color:#444">{% if user.about_me %}{{user.about_me}}{% else %}暂无{% endif %}</p>
                     <h5 style="color:#444">
-                    基友:
+                    好友:
                     </h5>
                     <p style="color:#444">{{user.valid_friends_number() - 1}}</p>
                     {% if user.id == g.user.id %}
@@ -32,7 +32,7 @@
                             {% if g.user.is_following(user) %}
                                 <i style="color:#666" class="icon-plus-sign-alt"> 等待对方回复</i>
                             {% else %}
-                                <a href="{{url_for('follow', nickname = user.nickname)}}"><i class="icon-plus-sign-alt"></i> 发送搅基申请</a>
+                                <a href="{{url_for('follow', nickname = user.nickname)}}"><i class="icon-plus-sign-alt"></i> 发送好友申请</a>
                             {% endif %}
                         {% else %}
                             <i style="color:#333" class="icon-heart"></i> 已有染</a>
