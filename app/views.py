@@ -146,6 +146,8 @@ def weibo_callback():
     print uid
     print email
 
+    
+
     user = User.query.filter_by(email=email).first()
     print user
     
