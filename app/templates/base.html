@@ -46,7 +46,7 @@
         <ul class="right">
           <li class="divider hide-for-small"></li>
           <li class="has-dropdown">
-            <a href="#"><img src="{{g.user.avatar(20)}}"/>&nbsp;{{g.user.nickname}}</a>
+            <a href="#"><img style="width:20px; height:20px" src="{{g.user.avatar(20)}}"/>&nbsp;{{g.user.nickname}}</a>
               <ul class="dropdown">
                 <li>
                   <a href="{{ url_for('user', nickname = g.user.nickname) }}"> <i class="icon-home"></i> 个人信息</a>

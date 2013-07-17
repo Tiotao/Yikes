@@ -1,6 +1,6 @@
 <table width=100% style="border:none">
     <tr>
-        <td valign = "middle" width="50px"><a href="{{url_for('user', nickname = request.sends.nickname)}}"><img src="{{request.sends.avatar(50)}}" /></a>
+        <td valign = "middle" width="50px"><a href="{{url_for('user', nickname = request.sends.nickname)}}"><img style="width:50px; height:50px" src="{{request.sends.avatar(50)}}" /></a>
         <td valign = "middle" width="40%">
             <a href="{{url_for('user', nickname = request.sends.nickname)}}">{{request.sends.nickname}}</a> 想要成为你的基友  
         </td>

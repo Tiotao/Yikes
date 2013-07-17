@@ -82,7 +82,7 @@ class User(db.Model):
 	#get user's avatar
 	def avatar(self, size):
 		if self.weibo_id:
-			return self.weibo_img + '?width=' + str(size) + '&height=' + str(size)
+			return self.weibo_img
 		elif self.facebook_id:
 			return 'https://graph.facebook.com/' + str(self.facebook_id) + '/picture?width=' + str(size) + '&height=' + str(size)
 		elif self.renren_id:

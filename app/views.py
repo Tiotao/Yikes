@@ -151,7 +151,7 @@ def weibo_callback():
     
     if user is None:
         weibo_user = client.users.show.get(uid=uid)
-        img = weibo_user['profile_image_url']
+        img = weibo_user['avatar_large']
         user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER, weibo_id = str(uid), weibo_img = img)
         db.session.add(user)
         db.session.commit()
