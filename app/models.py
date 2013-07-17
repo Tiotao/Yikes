@@ -23,6 +23,14 @@ class User(db.Model):
 	nickname = db.Column(db.String(64), index = True, unique = True)
 	email = db.Column(db.String(120), index = True, unique = True)
 	role = db.Column(db.SmallInteger, default = ROLE_USER)
+
+	#third-party login
+	weibo_id = db.Column(db.String(64), unique = True)
+	weibo_img = db.Column(db.String(120), unique = True)
+	facebook_id = db.Column(db.String(64), unique = True)
+	renren_id = db.Column(db.String(64), unique = True)
+	alipay_id = db.Column(db.String(64), unique = True)
+
 	
 	#back reference from current records
 	borrow = db.relationship('Record', backref = 'borrows', lazy = 'dynamic', primaryjoin = ('Record.borrower_id == User.id'))
@@ -73,7 +81,16 @@ class User(db.Model):
 
 	#get user's avatar
 	def avatar(self, size):
-		return 'http://www.gravatar.com/avatar/' + md5(self.email).hexdigest() + '?d=mm&s=' + str(size)
+		if weibo_id:
+			return weibo_img
+		elif facebook_id:
+			return 'https://graph.facebook.com/' + str(facebook_id) + '/picture?width=' + str(size) + '&height=' + str(size)
+		elif renren_id:
+			pass
+		elif alipay_id:
+			pass
+		else:
+			return 'http://www.gravatar.com/avatar/' + md5(self.email).hexdigest() + '?d=mm&s=' + str(size)
 
 	#follow an user
 	def follow(self, user):

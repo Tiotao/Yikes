@@ -142,18 +142,17 @@ def weibo_callback():
         return redirect(next_url)
 
     uid = client.account.get_uid.get()['uid']
-    email = '1@example.com'
+    email = str(uid) + '@example.com'
     print uid
     print email
-
-
 
     user = User.query.filter_by(email=email).first()
     print user
     
     if user is None:
         weibo_user = client.users.show.get(uid=uid)
-        user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER)
+        img = weibo_user['profile_image_url']
+        user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER, weibo_id = str(uid), weibo_img = img)
         db.session.add(user)
         db.session.commit()
         db.session.add(user.follow(user))
@@ -206,7 +205,7 @@ def facebook_callback(resp):
 
         fb_email = me.data['email']
 
-        user = User(nickname = fb_username, email = fb_email, role = ROLE_USER)
+        user = User(nickname = fb_username, email = fb_email, role = ROLE_USER, facebook_id = str(fb_id))
         db.session.add(user)
         db.session.commit()
         db.session.add(user.follow(user))
