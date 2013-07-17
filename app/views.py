@@ -144,7 +144,6 @@ def weibo_callback():
     uid = client.account.get_uid.get()['uid']
     weibo_user = client.users.show.get(uid=uid)
     print uid
-
     user = User.query.filter_by(nickname=weibo_user['screen_name']).first()
     print user
     
