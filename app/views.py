@@ -142,11 +142,11 @@ def weibo_callback():
         return redirect(next_url)
 
     uid = client.account.get_uid.get()['uid']
-    email = str(uid),'@example.com'
+    email = '1@example.com'
     print uid
     print email
 
-    
+
 
     user = User.query.filter_by(email=email).first()
     print user
