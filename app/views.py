@@ -180,7 +180,7 @@ def weibo_callback():
         #cannot find a user with the current weibo id        
         if user is None:
 
-            u = User.query.filter_by(email=email).first():
+            u = User.query.filter_by(email=email).first()
             # email taken
             if u:
                 login_user(u, remember = remember_me)
