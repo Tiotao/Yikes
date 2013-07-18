@@ -144,7 +144,8 @@ def weibo_callback():
 
     next_url = request.args.get('next') or url_for('index')
 
-    if g.user is None:
+    if g.user is not None:
+        print g.user
         if r is None or r.access_token is None:
             flash('You denied the connection')
             return redirect(next_url)
