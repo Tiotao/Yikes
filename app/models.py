@@ -81,7 +81,7 @@ class User(db.Model):
 
 	#get user's avatar
 	def avatar(self, size):
-		if self.weibo_id and self.weibo_id is not None:
+		if self.weibo_img and self.weibo_img is not None:
 			return self.weibo_img
 		elif self.facebook_id and self.facebook_id is not None:
 			return 'https://graph.facebook.com/' + str(self.facebook_id) + '/picture?width=' + str(size) + '&height=' + str(size)
