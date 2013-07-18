@@ -50,13 +50,7 @@
             <a href="#"><img style="width:20px; height:20px" src="{{g.user.avatar(20)}}"/>&nbsp;{{g.user.nickname}}</a>
               <ul class="dropdown">
                 <li>
-                  <a href="{{ url_for('user', nickname = g.user.nickname) }}"> <i class="icon-home"></i> 个人信息</a>
-                </li>
-                <li>
-                  <a href="{{ url_for('social') }}"><i class="icon-heart"></i> 我的好友</a>
-                </li>
-                <li>
-                  <a href="{{ url_for('notice') }}"><i class="icon-envelope"></i> 通知中心</a>
+                  <a href="{{ url_for('settings') }}"><i class="icon-gear"></i> 账号设置</a>
                 </li>
                 <li class="divider"></li>
                 <li><a href="{{ url_for('logout') }}"><i class="icon-signout"></i> 您慢走</a></li>
