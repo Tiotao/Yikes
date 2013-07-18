@@ -227,33 +227,52 @@ def facebook_callback(resp):
         return redirect(next_url)
 
     session['fb_access_token'] = (resp['access_token'], '')
-
-    me = facebook.get('/me')
-    user = User.query.filter_by(email=me.data['email']).first()
-    print user
     
-    if user is None:
-        fb_id = me.data['id']
-        
-        if me.data['username']:
-            fb_username = me.data['username']
-        else:
-            fb_username = me.data['name']
-
-        fb_email = me.data['email']
-
-        user = User(nickname = fb_username, email = fb_email, role = ROLE_USER, facebook_id = str(fb_id))
-        db.session.add(user)
-        db.session.commit()
-        db.session.add(user.follow(user))
-        db.session.commit()
-
     remember_me = False
     
     if 'remember_me' in session:
         remember_me = session['remember_me']
         session.pop('remember_me', None)
+
+    me = facebook.get('/me')
+    fb_id = me.data['id']
+    fb_email = me.data['email']
     
+    if me.data['username']:
+        fb_username = me.data['username']
+    else:
+        fb_username = me.data['name']
+
+    if g.user is not None and g.user.is_authenticated():
+        if User.query.filter_by(facebook_id=str(fb_id)).first() is None:
+            g.user.facebook_id = str(fb_id)
+            db.session.add(g.user)
+            db.session.commit()
+            flash('You are now linked with %s' % fb_username)
+        else:
+            flash('Your fb account has been linked previously')
+
+        return redirect(url_for('settings'))
+
+
+    user = User.query.filter_by(facebook_id=str(fb_id)).first()
+    print user
+    
+    if user is None:
+        u = User.query.filter_by(email=fb_email).first()        
+        if u:
+            login_user(u, remember = remember_me)
+            return facebook.authorize(callback=url_for('facebook_callback',
+                    next=request.args.get('next') or request.referrer or None,
+                    _external=True))
+        
+        else:
+            user = User(nickname = fb_username, email = fb_email, role = ROLE_USER, facebook_id = str(fb_id))
+            db.session.add(user)
+            db.session.commit()
+            db.session.add(user.follow(user))
+            db.session.commit()
+
     login_user(user, remember = remember_me)
     
     print user.email
