@@ -194,7 +194,7 @@ def weibo_callback():
                 db.session.commit()
                 db.session.add(user.follow(user))
                 db.session.commit()
-                client.statuses.update.post(status=u'test oauth2.0')
+                #client.statuses.update.post(status=u'test oauth2.0')
 
         remember_me = False
         

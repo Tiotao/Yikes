@@ -41,7 +41,7 @@
         <li class="divider"></li>
         <li><a href="{{ url_for('social') }}">我的好友</a></li>
         <li class="divider"></li>
-        <li><a href="{{ url_for('notice') }}">通知中心</a></li>
+        <li><a href="{{ url_for('notice') }}">通知中心 {% if g.user.incoming_requests().count() > 0 %} ({{ g.user.incoming_requests().count() }}) {% endif %} </a></li>
         <li class="divider"></li>
         </ul>
         <ul class="right">
@@ -90,7 +90,7 @@
   <footer>
   <div class="top-bar" style="background:#000;margin-bottom: 0em">
   <div style="text-align:right; margin-right: 0.5em">
-    <small style="color: #fff"><i class="icon-cloud"></i>  Written by Tiotao, inspired by Yike and Gary, 2013</small>
+    <small style="color: #fff"><i class="icon-cloud"></i>  Written by Tiotao, inspired by Yike and 小夫, 2013</small>
   </div>
   </div>
   </footer>

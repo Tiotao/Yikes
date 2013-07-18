@@ -105,9 +105,10 @@ class User(db.Model):
 
 		elif not self.is_following(user):
 			self.followed.append(user)
-			fr = FriendRequest(sender_id = self.id, receiver_id = user.id, timestamp = datetime.utcnow(), status = REQUEST_PENDING)
-			db.session.add(fr)
-			db.session.commit()
+			if not self == user:
+				fr = FriendRequest(sender_id = self.id, receiver_id = user.id, timestamp = datetime.utcnow(), status = REQUEST_PENDING)
+				db.session.add(fr)
+				db.session.commit()
 			return self
 
 
