@@ -169,22 +169,32 @@ def weibo_callback():
             return redirect(next_url)
 
         uid = client.account.get_uid.get()['uid']
+
         email = str(uid) + '@example.com'
         print uid
         print email
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(weibo_id=str(uid)).first()
         print user
-        
+
+        #cannot find a user with the current weibo id        
         if user is None:
-            weibo_user = client.users.show.get(uid=uid)
-            img = weibo_user['avatar_large']
-            user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER, weibo_id = str(uid), weibo_img = img)
-            db.session.add(user)
-            db.session.commit()
-            db.session.add(user.follow(user))
-            db.session.commit()
-            client.statuses.update.post(status=u'test oauth2.0')
+
+            u = User.query.filter_by(email=email).first():
+            # email taken
+            if u:
+                login_user(u, remember = remember_me)
+                return redirect(url)
+            # email not taken
+            else:
+                weibo_user = client.users.show.get(uid=uid)
+                img = weibo_user['avatar_large']
+                user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER, weibo_id = str(uid), weibo_img = img)
+                db.session.add(user)
+                db.session.commit()
+                db.session.add(user.follow(user))
+                db.session.commit()
+                client.statuses.update.post(status=u'test oauth2.0')
 
         remember_me = False
         
