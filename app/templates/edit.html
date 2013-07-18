@@ -9,37 +9,37 @@
     <div class="small-12 columns">
         <div class="standard-content"> 
             <form action="" method="post" name="amount">
-                        {{form.hidden_tag()}}
-                        <div class="row collapse">
-                            <div class="small-12 columns{% if form.errors.nickname %} error{% endif %}">
-                                <div class="small-12 columns">
-                                    <h6>用户名：</h6>
-                                    {{ form.nickname(maxlength = 64, class = "span4") }}
-                                    {% for error in form.errors.nickname %}
-                                        <small>{{error}}</small>
-                                    {% endfor %}
-                                </div>
-                            </div>
+                {{form.hidden_tag()}}
+                <div class="row collapse">
+                    <div class="small-12 columns{% if form.errors.nickname %} error{% endif %}">
+                        <div class="small-12 columns">
+                            <h6>用户名：</h6>
+                            {{ form.nickname(maxlength = 64, class = "span4") }}
+                            {% for error in form.errors.nickname %}
+                                <small>{{error}}</small>
+                            {% endfor %}
                         </div>
+                    </div>
+                </div>
 
-                        <div class="row collapse">
-                            <div class="small-12 columns{% if form.errors.about_me %} error{% endif %}">
-                                <div class="small-12 columns">
-                                    <h6>关于我：</h6>
-                                    {{ form.about_me(cols = 64, rows = 4, class = "span4") }}
-                                    {% for error in form.errors.about_me %}
-                                        <small>{{error}}</small>
-                                    {% endfor %}
-                                </div>
-                            </div>
+                <div class="row collapse">
+                    <div class="small-12 columns{% if form.errors.about_me %} error{% endif %}">
+                        <div class="small-12 columns">
+                            <h6>关于我：</h6>
+                            {{ form.about_me(cols = 64, rows = 4, class = "span4") }}
+                            {% for error in form.errors.about_me %}
+                                <small>{{error}}</small>
+                            {% endfor %}
                         </div>
+                    </div>
+                </div>
 
-                        <div class="row">
-                            <div class="small-12 columns">
-                                <input class="button" style="background: #fc0; margin-top: 0.5em;" type="submit" value="好的">
-                            </div>
-                        </div>
-                    </form>
+                <div class="row">
+                    <div class="small-12 columns">
+                        <input class="button" style="background: #fc0; margin-top: 0.5em;" type="submit" value="好的">
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
