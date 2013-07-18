@@ -2,7 +2,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>File Not Found</h1>
-<p><a href = "{{url_for('index')}}">Back</a></p>
+
+<div class="row" style="background-color:white; margin-bottom:2em">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <h1>啊不要找不该找的东西！</h1>
+                <h6 class="subheader">抱歉，你找的网页不存在哦！</h6>
+                <a href="{{url_for('index')}}">返回</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 

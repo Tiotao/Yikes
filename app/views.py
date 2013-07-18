@@ -430,6 +430,15 @@ def search():
         return redirect(url_for('index'))
     return redirect(url_for('search_results', query = g.search_form.search.data))
 
+@app.route('/admin')
+def admin():
+    users = User.query.all()
+    requests = FriendRequest.query.all()
+    records = Record.query.all()
+    histories = History.query.all()
+    return render_template('admin.html', users=users, requests = requests, records = records, histories = histories)
+
+
 @app.route('/search_results/<query>')
 @login_required
 def search_results(query):

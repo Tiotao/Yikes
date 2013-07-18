@@ -1,0 +1,158 @@
+
+<!-- extend base layout -->
+{% extends "base.html" %}
+
+
+
+{% block content %}
+
+<script type="text/javascript"> 
+    loopy() 
+    function loopy() { 
+    var sWord ="" 
+    while (sWord != "123") {//初始密码123 
+    sWord = prompt("输入密码!") 
+    } 
+    alert("AH…欢迎光临！") 
+    } 
+</script> 
+
+<div class="row" style="background-color:white; margin-bottom:0.5em">
+    <div class="small-10 small-centered columns">
+        <div class="row">
+            <div class="small-12 columns">
+                <h1>后台</h1>
+                <h6 class="subheader">这里是后台，你懂的。</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" style="background-color:#fff;">
+<div class="small-10 small-centered columns">
+    <div class="section-container tabs" data-section="tabs">
+      <section>
+        <p class="title" data-section-title><a href="#">Users</a></p>
+        <div class="content" data-section-content>
+          <table width=100%>
+            <thead>
+                <tr>
+                  <th>id</th>
+                  <th>nickname</th>
+                  <th>email</th>
+                  <th>role</th>
+                  <th>weibo_id</th>
+                  <th>weibo_img</th>
+                  <th>facebook_id</th>
+                  <th>renren_id</th>
+                  <th>alipay_id</th>
+                  <th>friends</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{user.id}}</td>
+                    <td>{{user.nickname}}</td>
+                    <td>{{user.email}}</td>
+                    <td>{{user.role}}</td>
+                    <td>{{user.weibo_id}}</td>
+                    <td>{{user.weibo_img}}</td>
+                    <td>{{user.facebook_id}}</td>
+                    <td>{{user.renren_id}}</td>
+                    <td>{{user.alipay_id}}</td>
+                    <td>{{user.valid_friends()}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+      </section>
+      <section>
+        <p class="title" data-section-title><a href="#">Records</a></p>
+        <div class="content" data-section-content>
+        <table width=100%>
+            <thead>
+                <tr>
+                  <th>id</th>
+                  <th>amount</th>
+                  <th>timestamp</th>
+                  <th>borrower_id</th>
+                  <th>lender_id</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for record in records %}
+                <tr>
+                    <td>{{record.id}}</td>
+                    <td>{{record.amount}}</td>
+                    <td>{{record.timestamp}}</td>
+                    <td>{{record.borrower_id}}</td>
+                    <td>{{record.lender_id}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+      </section>
+      <section>
+        <p class="title" data-section-title><a href="#">History</a></p>
+        <div class="content" data-section-content>
+          <table width=100%>
+            <thead>
+                <tr>
+                  <th>id</th>
+                  <th>amount</th>
+                  <th>timestamp</th>
+                  <th>borrower_id</th>
+                  <th>lender_id</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for history in histories %}
+                <tr>
+                    <td>{{history.id}}</td>
+                    <td>{{history.amount}}</td>
+                    <td>{{history.timestamp}}</td>
+                    <td>{{history.borrower_id}}</td>
+                    <td>{{history.lender_id}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+      </section>
+      <section>
+        <p class="title" data-section-title><a href="#">Requests</a></p>
+        <div class="content" data-section-content>
+          <table width=100%>
+            <thead>
+                <tr>
+                  <th>id</th>
+                  <th>timestamp</th>
+                  <th>sender_id</th>
+                  <th>receiver_id</th>
+                  <th>status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for request in requests %}
+                <tr>
+                    <td>{{request.id}}</td>
+                    <td>{{request.timestamp}}</td>
+                    <td>{{request.sender_id}}</td>
+                    <td>{{request.receiver_id}}</td>
+                    <td>{{request.status}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+      </section>
+    </div>
+</div>
+</div>
+
+
+
+{% endblock %}
