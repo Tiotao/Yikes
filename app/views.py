@@ -340,7 +340,7 @@ def settings():
         edit_form.about_me.data = g.user.about_me
 
     return render_template('settings.html',
-        edit_form = edit_form
+        edit_form = edit_form,
         sina_url = url)
 
 
