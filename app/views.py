@@ -151,8 +151,8 @@ def weibo_callback():
         
         uid = client.account.get_uid.get()['uid']
         
-        if User.query.filter_by(weibo_id=uid).first() is None:
-            g.user.weibo_id = uid
+        if User.query.filter_by(weibo_id=str(uid)).first() is None:
+            g.user.weibo_id = str(uid)
             db.session.add(g.user)
             db.session.commit()
             flash('You are now linked with %s' % client.users.show.get(uid=uid)['screen_name'])
