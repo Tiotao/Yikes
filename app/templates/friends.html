@@ -13,7 +13,7 @@
                         {% if g.user.is_following(friend) %}
                             <i style="color:#666" class="icon-plus-sign-alt"> 等待对方回复</i>
                         {% else %}
-                            <a href="{{url_for('follow', nickname = friend.nickname)}}"><i class="icon-plus-sign-alt"></i> 发送搅基申请</a>
+                            <a href="{{url_for('follow', nickname = friend.nickname)}}"><i class="icon-plus-sign-alt"></i> 发送好友申请</a>
                         {% endif %}
                  
                     {% endif %}

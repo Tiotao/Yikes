@@ -2,7 +2,7 @@
     <tr>
         <td valign = "middle" width="50px"><a href="{{url_for('user', nickname = request.sends.nickname)}}"><img style="width:34px; height:34px" src="{{request.sends.avatar(50)}}" /></a>
         <td valign = "middle" width="40%">
-            <a href="{{url_for('user', nickname = request.sends.nickname)}}">{{request.sends.nickname}}</a> 想要成为你的基友  
+            <a href="{{url_for('user', nickname = request.sends.nickname)}}">{{request.sends.nickname}}</a> 想要成为你的好友  
         </td>
         <td align = "left">
         {% include 'request_response.html' %}

@@ -131,6 +131,7 @@ class UpdateRequest(object):
 		#edge already exists
 		print "all edges:" , self.all_edges()
 		print "add:", (borrower, lender)
+		print amount
 		print self.group.has_edge((borrower, lender))
 
 		if self.group.has_edge((borrower, lender)):
@@ -144,8 +145,10 @@ class UpdateRequest(object):
 			if edge_weight > existing_weight:
 				self.group.add_edge((borrower, lender), wt=amount - existing_weight)
 				self.group.del_edge((lender, borrower))
+				print ">"
 			else:
-				self.group.set_edge_weight((lender, borrower), edge_weight - amount)
+				self.group.set_edge_weight((lender, borrower), existing_weight - amount)
+				print "<", edge_weight - amount
 
 		else:
 		#edge does not exist

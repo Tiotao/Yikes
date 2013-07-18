@@ -52,10 +52,14 @@ def index(page = 1):
             edges.append((str(r.borrower_id), str(r.lender_id)))
             weights.append(r.amount)
             #delete existing records
+            print "del: ", r
             db.session.delete(r)
+            db.session.commit()
 
         #create graph model from edges and nodes
         req = UpdateRequest()
+        for w in weights:
+            print w
         req.form_graph(nodes, edges, weights)
         
         #add new record into graph model
@@ -65,9 +69,12 @@ def index(page = 1):
         new_records = req.all_edges()
         for rec in new_records:    
             #re-organize current record in database
+            print req.group.edge_weight(rec)
             db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
+            db.session.commit()
+            print "add: ", rec
+
         
-        db.session.commit()
         flash('Your record is now live!')
         return redirect(url_for('index'))
     #borrow records and lend records
@@ -137,40 +144,59 @@ def weibo_callback():
 
     next_url = request.args.get('next') or url_for('index')
 
-    if r is None or r.access_token is None:
-        flash('You denied the login')
-        return redirect(next_url)
+    if g.user is not None:
+        if r is None or r.access_token is None:
+            flash('You denied the connection')
+            return redirect(next_url)
+        
+        uid = client.account.get_uid.get()['uid']
+        
+        if User.query.filter_by(weibo_id=uid).first() is None:
+            g.user.weibo_id = uid
+            db.session.add(g.user)
+            db.session.commit()
+            flash('You are now linked with %s' % client.users.show.get(uid=uid)['screen_name'])
+        else:
+            flash('Your weibo account has been linked previously')
 
-    uid = client.account.get_uid.get()['uid']
-    email = str(uid) + '@example.com'
-    print uid
-    print email
+        return redirect(url_for('settings'))
+        
+    else:
 
-    user = User.query.filter_by(email=email).first()
-    print user
-    
-    if user is None:
-        weibo_user = client.users.show.get(uid=uid)
-        img = weibo_user['avatar_large']
-        user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER, weibo_id = str(uid), weibo_img = img)
-        db.session.add(user)
-        db.session.commit()
-        db.session.add(user.follow(user))
-        db.session.commit()
-        client.statuses.update.post(status=u'test oauth2.0')
+        if r is None or r.access_token is None:
+            flash('You denied the login')
+            return redirect(next_url)
 
-    remember_me = False
-    
-    if 'remember_me' in session:
-        remember_me = session['remember_me']
-        session.pop('remember_me', None)
-    
-    login_user(user, remember = remember_me)
-    
-    print user.email
+        uid = client.account.get_uid.get()['uid']
+        email = str(uid) + '@example.com'
+        print uid
+        print email
 
-    flash('You are now logged in as %s' % user.nickname)
-    return redirect(url_for('index'))
+        user = User.query.filter_by(email=email).first()
+        print user
+        
+        if user is None:
+            weibo_user = client.users.show.get(uid=uid)
+            img = weibo_user['avatar_large']
+            user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER, weibo_id = str(uid), weibo_img = img)
+            db.session.add(user)
+            db.session.commit()
+            db.session.add(user.follow(user))
+            db.session.commit()
+            client.statuses.update.post(status=u'test oauth2.0')
+
+        remember_me = False
+        
+        if 'remember_me' in session:
+            remember_me = session['remember_me']
+            session.pop('remember_me', None)
+        
+        login_user(user, remember = remember_me)
+        
+        print user.email
+
+        flash('You are now logged in as %s' % user.nickname)
+        return redirect(url_for('index'))
 
 #oauth for FACEBOOK
 @app.route('/login/facebook')
@@ -294,6 +320,26 @@ def user(nickname, page = 1):
         borrow_records = borrow_records,
         lend_records = lend_records,
         friends = friends)
+
+
+@app.route('/settings', methods = ['GET', 'POST'])
+@login_required
+
+def settings():
+    edit_form = EditForm(g.user.nickname)
+    if edit_form.validate_on_submit():
+        g.user.nickname = edit_form.nickname.data
+        g.user.about_me = edit_form.about_me.data
+        db.session.add(g.user)
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('user', nickname = nickname))
+    else:
+        edit_form.nickname.data = g.user.nickname
+        edit_form.about_me.data = g.user.about_me
+
+    return render_template('settings.html',
+        edit_form = edit_form)
 
 
 
