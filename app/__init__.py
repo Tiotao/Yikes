@@ -37,7 +37,7 @@ APP_SECRET = 'a26ea31dc385ed540b8f141f91087734'      # app secret
 CALLBACK_URL = 'http://yikes.herokuapp.com/weibo_callback'  # callback url
 
 client = APIClient(app_key=APP_KEY, app_secret=APP_SECRET,
-                   redirect_uri=CALLBACK_URL, scope='email')
-url = client.get_authorize_url()    # redirect the user to `url'
+                   redirect_uri=CALLBACK_URL)
+url = client.get_authorize_url(scope='email')    # redirect the user to `url'
 
 from app import views, models
