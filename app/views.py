@@ -141,7 +141,7 @@ def weibo_callback():
     session['wb_access_token'] = access_token
     session['wb_expires_in'] = expires_in
     client.set_access_token(access_token, expires_in)
-    print client.account.profile.email['email']
+    print client.account.profile.email.get(access_token)['email']
 
     next_url = request.args.get('next') or url_for('index')
 
@@ -171,7 +171,7 @@ def weibo_callback():
 
         uid = client.account.get_uid.get()['uid']
 
-        email = client.account.profile.email['email']
+        email = client.account.profile.email.get(access_token)['email']
         print uid
         print email
 
