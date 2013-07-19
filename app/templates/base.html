@@ -46,6 +46,8 @@
         </ul>
         <ul class="right">
           <li class="divider hide-for-small"></li>
+          <li><a href="{{ url_for('qrcode') }}"><i class="icon-qrcode icon-large"></i>&nbsp;生成借款二维码</a></li>
+          <li class="divider"></li>
           <li class="has-dropdown">
             <a href="#"><img style="width:20px; height:20px" src="{{g.user.avatar(20)}}"/>&nbsp;{{g.user.nickname}}</a>
               <ul class="dropdown">
@@ -56,6 +58,13 @@
                 <li><a href="{{ url_for('logout') }}"><i class="icon-signout"></i> 您慢走</a></li>
               </ul>
           </li>
+        </ul>
+      </section>
+      {% else %}
+      <section class="top-bar-section">
+        <ul class="right hide-for-large">
+          <li class="divider"></li>
+          <li><a href="#login_area">登录</a></li>
         </ul>
       </section>
       {% endif %}

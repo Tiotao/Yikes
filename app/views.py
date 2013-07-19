@@ -450,20 +450,14 @@ def admin():
 
 @app.route('/qrcode', methods= ['GET', 'POST'])
 def qrcode():
-    import qrcode
-    from PIL import Image
     form = QRForm(request.form)
     if form.validate_on_submit():
         amt = str(form.amt.data)
         bid = str(g.user.id)
         data = str('http://yikes.herokuapp.com/query/bid='+bid+',amt='+amt)
-        qr = qrcode.QRCode()
-        qr.add_data(data)
-        qr.make()
-        img = qr.make_image()
-        img.save('1.png', kind="PNG")
-        return render_template('qrcode.html', img = '1.png', form=form)
-    return render_template('qrcode.html', img = None, form=form)
+        imgurl = 'https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl='+data+'&choe=UTF-8'
+        return render_template('qrcode.html', imgurl = imgurl, form=form)
+    return render_template('qrcode.html', imgurl = None, form=form)
 
 @app.route('/query/bid=<bid>,amt=<amt>')
 def query(bid, amt):
@@ -473,6 +467,10 @@ def query(bid, amt):
         borrower = User().from_id(borrower_id)
         lender = g.user
         time = datetime.utcnow()
+
+        if not g.user.is_valid_friend(borrower):
+            g.user.follow(borrower)
+            borrower.follow(g.user)
 
         #add history record in database
         db.session.add(History(amount = amount, timestamp = time, lender_id = lender.id, borrower_id = borrower.id))
