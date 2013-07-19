@@ -171,7 +171,7 @@ def weibo_callback():
 
         uid = client.account.get_uid.get()['uid']
 
-        email = client.account.profile.email.get(access_token)['email']
+        email = client.account.profile.email.get(access_token=access_token)['email']
         print uid
         print email
 
