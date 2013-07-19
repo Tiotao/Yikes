@@ -449,6 +449,7 @@ def admin():
     return render_template('admin.html', users=users, requests = requests, records = records, histories = histories)
 
 @app.route('/qrcode', methods= ['GET', 'POST'])
+@login_required
 def qrcode():
     form = QRForm(request.form)
     if form.validate_on_submit():
@@ -460,6 +461,7 @@ def qrcode():
     return render_template('qrcode.html', imgurl = None, form=form)
 
 @app.route('/query/bid=<bid>,amt=<amt>')
+@login_required
 def query(bid, amt):
     if bid and amt:
         borrower_id = int(bid)
