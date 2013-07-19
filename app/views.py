@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from app import app, db, lm, oid, oauth, facebook, client, url
-from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm
+from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm, QRForm
 from models import User, ROLE_USER, ROLE_ADMIN, FriendRequest, Record, History
 from datetime import datetime
 from config import RECORDS_PER_PAGE, MAX_SEARCH_RESULTS
@@ -141,6 +141,7 @@ def weibo_callback():
     session['wb_access_token'] = access_token
     session['wb_expires_in'] = expires_in
     client.set_access_token(access_token, expires_in)
+    print client.account.profile.email['email']
 
     next_url = request.args.get('next') or url_for('index')
 
@@ -170,7 +171,7 @@ def weibo_callback():
 
         uid = client.account.get_uid.get()['uid']
 
-        email = str(uid) + '@example.com'
+        email = client.account.profile.email['email']
         print uid
         print email
 
@@ -208,6 +209,15 @@ def weibo_callback():
 
         flash('You are now logged in as %s' % user.nickname)
         return redirect(url_for('index'))
+
+@app.route('/deconnect/weibo')
+def deconnect_weibo():
+    g.user.weibo_id = None
+    g.user.weibo_img = None
+    db.session.add(g.user)
+    db.session.commit()
+    return redirect(url_for('settings'))
+
 
 #oauth for FACEBOOK
 @app.route('/login/facebook')
@@ -283,6 +293,15 @@ def facebook_callback(resp):
 @facebook.tokengetter
 def get_facebook_oauth_token():
     return session.get('fb_access_token')   
+
+
+@app.route('/deconnect/facebook')
+def deconnect_facebook():
+    g.user.facebook_id = None
+    db.session.add(g.user)
+    db.session.commit()
+    return redirect(url_for('settings'))
+
 
 
 @app.before_request
@@ -421,15 +440,6 @@ def unfollow(nickname):
     flash('You have stopped following ' + nickname + '.')
     return redirect(url_for('user', nickname = nickname))
 
-
-
-@app.route('/search', methods = ['POST'])
-@login_required
-def search():
-    if not g.search_form.validate_on_submit():
-        return redirect(url_for('index'))
-    return redirect(url_for('search_results', query = g.search_form.search.data))
-
 @app.route('/admin')
 def admin():
     users = User.query.all()
@@ -438,16 +448,76 @@ def admin():
     histories = History.query.all()
     return render_template('admin.html', users=users, requests = requests, records = records, histories = histories)
 
+@app.route('/qrcode', methods= ['GET', 'POST'])
+def qrcode():
+    import qrcode
+    from PIL import Image
+    form = QRForm(request.form)
+    if form.validate_on_submit():
+        amt = str(form.amt.data)
+        bid = str(g.user.id)
+        data = str('http://yikes.herokuapp.com/query/bid='+bid+',amt='+amt)
+        qr = qrcode.QRCode()
+        qr.add_data(data)
+        qr.make()
+        img = qr.make_image()
+        img.save('1.png', kind="PNG")
+        return render_template('qrcode.html', img = '1.png', form=form)
+    return render_template('qrcode.html', img = None, form=form)
 
-@app.route('/search_results/<query>')
-@login_required
-def search_results(query):
-    results = Post.query.whoosh_search(query, MAX_SEARCH_RESULTS).all()
-    return render_template('search_results.html',
-        query = query,
-        results = results)
+@app.route('/query/bid=<bid>,amt=<amt>')
+def query(bid, amt):
+    if bid and amt:
+        borrower_id = int(bid)
+        amount = int(amt)
+        borrower = User().from_id(borrower_id)
+        lender = g.user
+        time = datetime.utcnow()
 
+        #add history record in database
+        db.session.add(History(amount = amount, timestamp = time, lender_id = lender.id, borrower_id = borrower.id))
 
+        #store mutual friends in temp_group => nodes
+        temp_group = borrower.mutual_friends(lender)
+        temp_group_id = []
+        for u in temp_group:
+            temp_group_id.append(str(u.id))
+
+        nodes = temp_group_id
+        records = Record.query.all()
+
+        #store related records in edges
+        edges_record = Record().get_records(temp_group_id)
+        edges = []
+        weights = []
+        
+        for r in edges_record:
+            edges.append((str(r.borrower_id), str(r.lender_id)))
+            weights.append(r.amount)
+            #delete existing records
+            print "del: ", r
+            db.session.delete(r)
+            db.session.commit()
+
+        #create graph model from edges and nodes
+        req = UpdateRequest()
+        for w in weights:
+            print w
+        req.form_graph(nodes, edges, weights)
+        
+        #add new record into graph model
+        req.add_record(str(borrower.id), str(lender.id), amount)
+        
+        #export edges from graph model
+        new_records = req.all_edges()
+        for rec in new_records:    
+            #re-organize current record in database
+            print req.group.edge_weight(rec)
+            db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
+            db.session.commit()
+            print "add: ", rec
+
+        return redirect(url_for('index'))
 
 @app.errorhandler(404)
 def internal_error(error):

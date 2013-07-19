@@ -29,6 +29,9 @@ class PostForm(Form):
 	post = TextField('post', validators = [Required()])
 	lender = SelectField('lender', choices=[], coerce=int)
 
+class QRForm(Form):
+	amt = IntegerField('amt', validators = [Required()])
+
 class SearchForm(Form):
 	search = TextField('search', validators = [Required()])
 
