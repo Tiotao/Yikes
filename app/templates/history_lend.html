@@ -5,10 +5,10 @@
         </td>
         <td valign = "middle">
             <a href="{{url_for('user', nickname = record.borrows.nickname)}}">{{record.borrows.nickname}}</a> 向你借了
-            <i class="icon-yen"> <b> {{record.amount}}</b> </i>  
+            <i class="icon-yen"></i><b>{{record.amount}}</b>   
         </td>
         <td align="right" valign="bottom">
-            <span style="color:#666; font-size:0.3em"><i class="icon-time"> {{momentjs(record.timestamp).calendar()}} </i></span>
+            <span style="color:#666; font-size:0.9em"><i class="icon-time"></i>  {{momentjs(record.timestamp).calendar()}}</span>
         </td>
     </tr>
 </table>

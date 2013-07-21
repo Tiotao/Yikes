@@ -12,8 +12,7 @@ from pygraph.classes.digraph import digraph
 from pygraph.algorithms.searching import breadth_first_search
 from pygraph.algorithms.cycles import find_cycle
 
-
-
+#main class
 class UpdateRequest(object):
 	def __init__(self):
 		self.group = digraph()
@@ -80,8 +79,6 @@ class UpdateRequest(object):
 						w = temp
 						break
 
-			print "y", t
-
 			if len(t) <= 1:
 				return False
 			
@@ -117,27 +114,17 @@ class UpdateRequest(object):
 
 			return True
 
-
-		dot = write(self.group)
-		gvv = gv.readstring(dot)
-		gv.layout(gvv,'dot')
-		gv.render(gvv,'png','1-after.png')
-
 	def add_record(self, borrower, lender, amount):
 		if amount == 0:
 			flash("please enter correct number")
 			return False
 		edge = (borrower, lender)
-		#edge already exists
-		print "all edges:" , self.all_edges()
-		print "add:", (borrower, lender)
-		print amount
-		print self.group.has_edge((borrower, lender))
-
+		
+		#edge already existed
 		if self.group.has_edge((borrower, lender)):
 			edge_weight = self.group.edge_weight(edge)
 			self.group.set_edge_weight(edge, edge_weight + amount)
-			print "yes"
+
 		#negative edge direction exists
 		elif self.group.has_edge((lender, borrower)):
 			edge_weight = amount
@@ -145,19 +132,12 @@ class UpdateRequest(object):
 			if edge_weight > existing_weight:
 				self.group.add_edge((borrower, lender), wt=amount - existing_weight)
 				self.group.del_edge((lender, borrower))
-				print ">"
+
 			else:
 				self.group.set_edge_weight((lender, borrower), existing_weight - amount)
-				print "<", edge_weight - amount
-
 		else:
 		#edge does not exist
 			self.group.add_edge((borrower, lender), wt=amount)
 
 		while self.update_group() != False:
-			print "y"
-
-
-
-
-
+			print "hahahahahaha, so messy!"

@@ -41,7 +41,6 @@ class User(db.Model):
 	his_lend = db.relationship('History', backref = 'lends', lazy = 'dynamic', primaryjoin = ('History.lender_id == User.id'))
 	
 	#back reference from friends request
-
 	request_from = db.relationship('FriendRequest', backref = 'sends', lazy = 'dynamic', primaryjoin = ('FriendRequest.sender_id == User.id'))
 	request_to = db.relationship('FriendRequest', backref = 'receives', lazy = 'dynamic', primaryjoin = ('FriendRequest.receiver_id == User.id'))
 
@@ -224,7 +223,7 @@ class Record(db.Model):
 	def __repr__(self):
 		return '<Record %r>' % (self.amount)
 
-#history class(same to record class)
+#history class(same as record class)
 class History(db.Model):
 	__tablename__ = 'history_table'
 	id = db.Column(db.Integer, primary_key = True)

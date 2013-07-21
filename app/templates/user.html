@@ -7,7 +7,35 @@
 <div id="edit" class="reveal-modal small">
     {% include 'edit.html' %}
 </div>
+<script>
+/* when document is ready */
+  $(function(){
+    /* initiate the plugin */
+    $("#borrow_holder").jPages({
+        containerID  : "borrow_itemContainer",
+        perPage      : 3,
+        startPage    : 1,
+        startRange   : 1,
+        midRange     : 5,
+        endRange     : 1
+    });
+});
+</script>
 
+<script>
+/* when document is ready */
+  $(function(){
+    /* initiate the plugin */
+    $("#lend_holder").jPages({
+        containerID  : "lend_itemContainer",
+        perPage      : 3,
+        startPage    : 1,
+        startRange   : 1,
+        midRange     : 5,
+        endRange     : 1
+    });
+});
+</script>
 
 <div class="row" style="background-color:white;">
     <div class="small-10 small-centered columns"><h1 style="margin-bottom: 0em">{{user.nickname}}</h1></div>
@@ -72,12 +100,16 @@
                 </div>
                 <div class="row">
                     <div class="small-12 columns">
-                        <div class="standard-content"> 
-                            {% for record in borrow_records %}
-                                {% include 'history_borrow.html' %}
-                            {% endfor %}
+ 
+                            <!-- item container -->
+                            <ul class="record-list" style="vertical-align:middle" id="borrow_itemContainer">
+                                {% for record in borrow_records %}
+                                    <li style="vertical-align: middle">{% include 'history_borrow.html' %}</li>
+                                {% endfor %}
+                            </ul>
+                            <div class="holder" id="borrow_holder">
+                            </div>
 
-                        </div>
                     </div>
                 </div>
             </div>
@@ -90,11 +122,14 @@
                 </div>
                 <div class="row">
                     <div class="small-12 columns">
-                        <div class="standard-content"> 
-                        {% for record in lend_records %}
-                                {% include 'history_lend.html' %}
-                        {% endfor %}
-                        </div>
+                            <!-- item container -->
+                            <ul class="record-list" style="vertical-align:middle" id="lend_itemContainer">
+                                {% for record in lend_records %}
+                                    <li style="vertical-align: middle">{% include 'history_lend.html' %}</li>
+                                {% endfor %}
+                            </ul>
+                            <div class="holder" id="lend_holder">
+                            </div>
                     </div>
                 </div>
             </div>

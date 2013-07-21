@@ -1,10 +1,10 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from app import app, db, lm, oid, oauth, facebook, client, url
-from forms import LoginForm, EditForm, PostForm, SearchForm, RecordForm, QRForm
+from forms import LoginForm, EditForm, SearchForm, RecordForm, QRForm
 from models import User, ROLE_USER, ROLE_ADMIN, FriendRequest, Record, History
 from datetime import datetime
-from config import RECORDS_PER_PAGE, MAX_SEARCH_RESULTS
+from config import RECORDS_PER_PAGE
 from main import UpdateRequest
 
 
@@ -12,81 +12,16 @@ from main import UpdateRequest
 def load_user(id):
     return User.query.get(int(id))
 
-@app.route('/', methods = ['GET', 'POST'])
-@app.route('/index', methods= ['GET', 'POST'])
-@app.route('/index/<int:page>', methods = ['GET', 'POST'])
-@login_required
-def index(page = 1):
-    form = RecordForm(request.form)
-    friends = sorted([(c.id, c.nickname) for c in g.user.valid_friends()], key=lambda friend: friend[0])
-    valid =[]
+@app.before_request
+def before_request():
+    g.user = current_user
+    if g.user.is_authenticated():
+        g.user.last_seen = datetime.utcnow()
+        db.session.add(g.user)
+        db.session.commit()
+        g.search_form = SearchForm()
 
-    for f in friends:
-        if not int(f[0]) == int(g.user.id):
-            valid.append(f)
-
-    form.lender.choices = valid
-    time = datetime.utcnow()
-    if form.validate_on_submit():
-        borrower = g.user
-        lender = User().from_id(form.lender.data)
-
-        #add history record in database
-        db.session.add(History(amount = form.amount.data, timestamp = time, lender_id = form.lender.data, borrower_id = borrower.id))
-
-        #store mutual friends in temp_group => nodes
-        temp_group = borrower.mutual_friends(lender)
-        temp_group_id = []
-        for u in temp_group:
-            temp_group_id.append(str(u.id))
-
-        nodes = temp_group_id
-        records = Record.query.all()
-
-        #store related records in edges
-        edges_record = Record().get_records(temp_group_id)
-        edges = []
-        weights = []
-        
-        for r in edges_record:
-            edges.append((str(r.borrower_id), str(r.lender_id)))
-            weights.append(r.amount)
-            #delete existing records
-            print "del: ", r
-            db.session.delete(r)
-            db.session.commit()
-
-        #create graph model from edges and nodes
-        req = UpdateRequest()
-        for w in weights:
-            print w
-        req.form_graph(nodes, edges, weights)
-        
-        #add new record into graph model
-        req.add_record(str(borrower.id), str(lender.id), form.amount.data)
-        
-        #export edges from graph model
-        new_records = req.all_edges()
-        for rec in new_records:    
-            #re-organize current record in database
-            print req.group.edge_weight(rec)
-            db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
-            db.session.commit()
-            print "add: ", rec
-
-        
-        flash('Your record is now live!')
-        return redirect(url_for('index'))
-    #borrow records and lend records
-    borrow_records = g.user.borrow_records()#.paginate(page, RECORDS_PER_PAGE, False)
-    lend_records = g.user.lend_records()#.paginate(page, RECORDS_PER_PAGE, False)
-    return render_template("index.html",
-        title = 'Home',
-        form = form,
-        borrow_records = borrow_records,
-        lend_records = lend_records,)
-
-
+#LOGIN
 #oid
 @app.route('/login', methods = ['GET', 'POST'])
 @oid.loginhandler
@@ -131,7 +66,6 @@ def after_login(resp):
 def login_weibo():
     return redirect(url)
 
-
 @app.route('/weibo_callback', methods = ['GET', 'POST'])
 def weibo_callback():
     code = request.args.get('code')
@@ -141,12 +75,12 @@ def weibo_callback():
     session['wb_access_token'] = access_token
     session['wb_expires_in'] = expires_in
     client.set_access_token(access_token, expires_in)
-    print client.account.profile.email.get(access_token=access_token)['email']
 
     next_url = request.args.get('next') or url_for('index')
 
+    #for connecting user's acc with weibo acc
     if g.user is not None and g.user.is_authenticated():
-        print g.user
+
         if r is None or r.access_token is None:
             flash('You denied the connection')
             return redirect(next_url)
@@ -162,7 +96,8 @@ def weibo_callback():
             flash('Your weibo account has been linked previously')
 
         return redirect(url_for('settings'))
-        
+
+    #for login  
     else:
 
         if r is None or r.access_token is None:
@@ -172,11 +107,7 @@ def weibo_callback():
         uid = client.account.get_uid.get()['uid']
 
         email = client.account.profile.email.get(access_token=access_token)['email']
-        print uid
-        print email
-
         user = User.query.filter_by(weibo_id=str(uid)).first()
-        print user
 
         #cannot find a user with the current weibo id        
         if user is None:
@@ -204,8 +135,6 @@ def weibo_callback():
             session.pop('remember_me', None)
         
         login_user(user, remember = remember_me)
-        
-        print user.email
 
         flash('You are now logged in as %s' % user.nickname)
         return redirect(url_for('index'))
@@ -253,6 +182,7 @@ def facebook_callback(resp):
     else:
         fb_username = me.data['name']
 
+    #for connecting user's acc with facebook acc
     if g.user is not None and g.user.is_authenticated():
         if User.query.filter_by(facebook_id=str(fb_id)).first() is None:
             g.user.facebook_id = str(fb_id)
@@ -264,10 +194,9 @@ def facebook_callback(resp):
 
         return redirect(url_for('settings'))
 
-
+    #for new login
     user = User.query.filter_by(facebook_id=str(fb_id)).first()
-    print user
-    
+
     if user is None:
         u = User.query.filter_by(email=fb_email).first()        
         if u:
@@ -284,8 +213,6 @@ def facebook_callback(resp):
             db.session.commit()
 
     login_user(user, remember = remember_me)
-    
-    print user.email
 
     flash('You are now logged in as %s' % user.nickname)
     return redirect(url_for('index'))
@@ -302,21 +229,82 @@ def deconnect_facebook():
     db.session.commit()
     return redirect(url_for('settings'))
 
-
-
-@app.before_request
-def before_request():
-    g.user = current_user
-    if g.user.is_authenticated():
-        g.user.last_seen = datetime.utcnow()
-        db.session.add(g.user)
-        db.session.commit()
-        g.search_form = SearchForm()
-
 @app.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+#PAGE SPECS
+
+@app.route('/', methods = ['GET', 'POST'])
+@app.route('/index', methods= ['GET', 'POST'])
+@app.route('/index/<int:page>', methods = ['GET', 'POST'])
+@login_required
+def index(page = 1):
+    form = RecordForm(request.form)
+    friends = sorted([(c.id, c.nickname) for c in g.user.valid_friends()], key=lambda friend: friend[0])
+    valid =[]
+
+    for f in friends:
+        if not int(f[0]) == int(g.user.id):
+            valid.append(f)
+
+    form.lender.choices = valid
+    time = datetime.utcnow()
+    if form.validate_on_submit():
+        borrower = g.user
+        lender = User().from_id(form.lender.data)
+
+        #add history record in database
+        db.session.add(History(amount = form.amount.data, timestamp = time, lender_id = form.lender.data, borrower_id = borrower.id))
+
+        #store mutual friends in temp_group => nodes
+        temp_group = borrower.mutual_friends(lender)
+        temp_group_id = []
+        for u in temp_group:
+            temp_group_id.append(str(u.id))
+
+        nodes = temp_group_id
+        records = Record.query.all()
+
+        #store related records in edges
+        edges_record = Record().get_records(temp_group_id)
+        edges = []
+        weights = []
+        
+        for r in edges_record:
+            edges.append((str(r.borrower_id), str(r.lender_id)))
+            weights.append(r.amount)
+            #delete existing records
+            db.session.delete(r)
+            db.session.commit()
+
+        #create graph model from edges and nodes
+        req = UpdateRequest()
+        req.form_graph(nodes, edges, weights)
+        
+        #add new record into graph model
+        req.add_record(str(borrower.id), str(lender.id), form.amount.data)
+        
+        #export edges from graph model
+        new_records = req.all_edges()
+        for rec in new_records:    
+            #re-organize current record in database
+            db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
+            db.session.commit()
+
+        
+        flash('Your record is now live!')
+        return redirect(url_for('index'))
+    #borrow records and lend records
+    borrow_records = g.user.borrow_records()#.paginate(page, RECORDS_PER_PAGE, False)
+    lend_records = g.user.lend_records()#.paginate(page, RECORDS_PER_PAGE, False)
+    return render_template("index.html",
+        title = 'Home',
+        form = form,
+        borrow_records = borrow_records,
+        lend_records = lend_records,)
+
 
 @app.route('/social', methods= ['GET', 'POST'])
 @login_required
@@ -347,9 +335,12 @@ def user(nickname, page = 1):
     if user == None:
         flash('User ' + nickname +' does not exist!' )
         return redirect(url_for('index'))
-    borrow_records = g.user.borrow_history()#.paginate(page, RECORDS_PER_PAGE, False)
-    lend_records = g.user.lend_history()#.paginate(page, RECORDS_PER_PAGE, False)
+
+    #data
+    borrow_records = g.user.borrow_history()
+    lend_records = g.user.lend_history()
     friends = User.query.filter_by(nickname = nickname).first().valid_friends()
+
 
     form = EditForm(g.user.nickname)
     if form.validate_on_submit():
@@ -370,10 +361,8 @@ def user(nickname, page = 1):
         lend_records = lend_records,
         friends = friends)
 
-
 @app.route('/settings', methods = ['GET', 'POST'])
 @login_required
-
 def settings():
     edit_form = EditForm(g.user.nickname)
     if edit_form.validate_on_submit():
@@ -391,18 +380,7 @@ def settings():
         edit_form = edit_form,
         sina_url = url)
 
-
-
-@app.route('/ignore_response/<id>')
-@login_required
-def ignore_response(id):
-    req = FriendRequest.query.filter_by(id = id).first()
-    sender = User().from_id(req.sender_id)
-    nickname = g.user.nickname
-    db.session.delete(req)
-    db.session.commit()
-    return redirect(url_for('user', nickname = nickname))
-
+#FRIENDING
 
 @app.route('/follow/<nickname>')
 def follow(nickname):
@@ -419,7 +397,10 @@ def follow(nickname):
         return redirect(url_for('user', nickname = nickname))
     db.session.add(u)
     db.session.commit()
-    flash('You are now following ' + nickname + '!')
+    if not user.is_valid_friend(g.user):
+        flash('Your request has been sent to ' + nickname + '!')
+    else:
+        flash('You are now friend with ' + nickname + '!')
     return redirect(url_for('user', nickname = nickname))
 
 @app.route('/unfollow/<nickname>')
@@ -440,6 +421,17 @@ def unfollow(nickname):
     flash('You have stopped following ' + nickname + '.')
     return redirect(url_for('user', nickname = nickname))
 
+@app.route('/ignore_response/<id>')
+@login_required
+def ignore_response(id):
+    req = FriendRequest.query.filter_by(id = id).first()
+    sender = User().from_id(req.sender_id)
+    nickname = g.user.nickname
+    db.session.delete(req)
+    db.session.commit()
+    return redirect(url_for('user', nickname = nickname))
+
+
 @app.route('/admin')
 def admin():
     users = User.query.all()
@@ -447,6 +439,8 @@ def admin():
     records = Record.query.all()
     histories = History.query.all()
     return render_template('admin.html', users=users, requests = requests, records = records, histories = histories)
+
+#QR SERVICES
 
 @app.route('/qrcode', methods= ['GET', 'POST'])
 @login_required
@@ -495,14 +489,11 @@ def query(bid, amt):
             edges.append((str(r.borrower_id), str(r.lender_id)))
             weights.append(r.amount)
             #delete existing records
-            print "del: ", r
             db.session.delete(r)
             db.session.commit()
 
         #create graph model from edges and nodes
         req = UpdateRequest()
-        for w in weights:
-            print w
         req.form_graph(nodes, edges, weights)
         
         #add new record into graph model
@@ -512,12 +503,12 @@ def query(bid, amt):
         new_records = req.all_edges()
         for rec in new_records:    
             #re-organize current record in database
-            print req.group.edge_weight(rec)
             db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
             db.session.commit()
-            print "add: ", rec
 
         return redirect(url_for('index'))
+
+#ERROR HANDLERS
 
 @app.errorhandler(404)
 def internal_error(error):

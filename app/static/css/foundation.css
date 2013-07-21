@@ -4297,3 +4297,50 @@ a.th {
   transition: box-shadow 0.45s, border-color 0.45s ease-in-out; }
 }
 
+ .holder {
+    margin:15px 0;
+}
+.holder a {
+    font-size:1em;
+    cursor:pointer;
+    margin:0 5px;
+    color:#333;
+}
+.holder a:hover {
+    background-color:#222;
+    color:#fff;
+}
+.holder a.jp-previous {
+    margin-right:0em;
+}
+.holder a.jp-next {
+    margin-left:0em;
+}
+.holder a.jp-current,a.jp-current:hover {
+    color:#222;
+    font-weight:bold;
+}
+.holder a.jp-disabled,a.jp-disabled:hover {
+    color:#bbb;
+}
+.holder a.jp-current,a.jp-current:hover,.holder a.jp-disabled,a.jp-disabled:hover {
+    cursor:default;
+    background:none;
+}
+.holder span {
+    margin: 0 5px;
+}
+
+/* Inline Lists */
+.record-list {
+  margin: 0em;
+  padding: 0em;
+  list-style: none;
+  overflow: hidden; }
+  .inline-list > li {
+    list-style: none;
+    float: left;
+    margin: 0em;
+    display: inline; }
+    .inline-list > li > * {
+      display: inline; }
