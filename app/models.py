@@ -93,23 +93,9 @@ class User(db.Model):
 
 	#follow an user
 	def follow(self, user):
-
-		if user.is_following(self):
+		if not self.is_following(user):
 			self.followed.append(user)
-			req = FriendRequest.query.\
-				filter(FriendRequest.sender_id == user.id, FriendRequest.receiver_id == self.id)
-			for r in req:
-				db.session.delete(r)
 			return self
-
-		elif not self.is_following(user):
-			self.followed.append(user)
-			if not self == user:
-				fr = FriendRequest(sender_id = self.id, receiver_id = user.id, timestamp = datetime.utcnow(), status = REQUEST_PENDING)
-				db.session.add(fr)
-				db.session.commit()
-			return self
-
 
 	#unfollow an user
 	def unfollow(self, user):

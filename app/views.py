@@ -1,11 +1,12 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from app import app, db, lm, oid, oauth, facebook, client, url
+from app import app, db, lm, oid, oauth, facebook, client, url, dq
 from forms import LoginForm, EditForm, SearchForm, RecordForm, QRForm
 from models import User, ROLE_USER, ROLE_ADMIN, FriendRequest, Record, History
 from datetime import datetime
 from config import RECORDS_PER_PAGE
 from main import UpdateRequest
+
 
 
 @lm.user_loader
@@ -43,23 +44,23 @@ def after_login(resp):
     if resp.email is None or resp.email == "":
         flash('Invalid Login. Please try again.')
         redirect(url_for('login'))
-    user = User.query.filter_by(email = resp.email).first()
+    user = dq.find(User, ['email'], [resp.email]).first()
     if user is None:
-        nickname = resp.nickname
-        if nickname is None or nickname == "":
-            nickname = resp.email.split('@')[0]
-        nickname = User.make_unique_nickname(nickname)
-        user = User(nickname = nickname, email = resp.email, role = ROLE_USER)
-        db.session.add(user)
-        db.session.commit()
-        db.session.add(user.follow(user))
-        db.session.commit()
+        user = dq.init_user(resp.nickname, resp.email, ROLE_USER, None, None, None, None, None)
     remember_me = False
     if 'remember_me' in session:
         remember_me = session['remember_me']
         session.pop('remember_me', None)
     login_user(user, remember = remember_me)
     return redirect(request.args.get('next') or url_for('index'))
+
+#dev without internet
+@app.route('/devlogin')
+def devlogin():
+    user = User.query.filter_by(nickname='tiotaocn').first()
+    login_user(user, remember = True)
+    return redirect(request.args.get('next') or url_for('index'))
+
 
 #oauth for WEIBO
 @app.route('/login/weibo')
@@ -85,13 +86,11 @@ def weibo_callback():
             flash('You denied the connection')
             return redirect(next_url)
         
-        uid = client.account.get_uid.get()['uid']
+        wb_id = client.account.get_uid.get()['uid']
         
-        if User.query.filter_by(weibo_id=str(uid)).first() is None:
-            g.user.weibo_id = str(uid)
-            db.session.add(g.user)
-            db.session.commit()
-            flash('You are now linked with %s' % client.users.show.get(uid=uid)['screen_name'])
+        if User.query.filter_by(weibo_id=str(wb_id)).first() is None:
+            dq.update(g.user, ['weibo_id'], [str(wb_id)])
+            flash('You are now linked with %s' % client.users.show.get(uid=wb_id)['screen_name'])
         else:
             flash('Your weibo account has been linked previously')
 
@@ -104,28 +103,26 @@ def weibo_callback():
             flash('You denied the login')
             return redirect(next_url)
 
-        uid = client.account.get_uid.get()['uid']
+        #user data from server
+        wb_id = client.account.get_uid.get()['uid']
+        wb_email = client.account.profile.email.get(access_token=access_token)['email']
+        weibo_user = client.users.show.get(uid=uid)
+        wb_nickname = weibo_user['screen_name']
+        wb_img = weibo_user['avatar_large']
 
-        email = client.account.profile.email.get(access_token=access_token)['email']
-        user = User.query.filter_by(weibo_id=str(uid)).first()
+        user = User.query.filter_by(weibo_id=str(wb_id)).first()
 
         #cannot find a user with the current weibo id        
         if user is None:
 
-            u = User.query.filter_by(email=email).first()
+            u = User.query.filter_by(email=wb_email).first()
             # email taken
             if u:
                 login_user(u, remember = remember_me)
                 return redirect(url)
             # email not taken
             else:
-                weibo_user = client.users.show.get(uid=uid)
-                img = weibo_user['avatar_large']
-                user = User(nickname = weibo_user['screen_name'], email = email, role = ROLE_USER, weibo_id = str(uid), weibo_img = img)
-                db.session.add(user)
-                db.session.commit()
-                db.session.add(user.follow(user))
-                db.session.commit()
+                dq.init_user(wb_nickname, wb_email, ROLE_USER, str(wb_id), wb_img, None, None, None)
                 #client.statuses.update.post(status=u'test oauth2.0')
 
         remember_me = False
@@ -173,21 +170,19 @@ def facebook_callback(resp):
         remember_me = session['remember_me']
         session.pop('remember_me', None)
 
-    me = facebook.get('/me')
+    fb_user = facebook.get('/me')
     fb_id = me.data['id']
     fb_email = me.data['email']
     
-    if me.data['username']:
-        fb_username = me.data['username']
+    if fb_user.data['username']:
+        fb_username = fb_user.data['username']
     else:
-        fb_username = me.data['name']
+        fb_username = fb_user.data['name']
 
     #for connecting user's acc with facebook acc
     if g.user is not None and g.user.is_authenticated():
         if User.query.filter_by(facebook_id=str(fb_id)).first() is None:
-            g.user.facebook_id = str(fb_id)
-            db.session.add(g.user)
-            db.session.commit()
+            dq.update(g.user, ['facebook_id'], [str(fb_id)])
             flash('You are now linked with %s' % fb_username)
         else:
             flash('Your fb account has been linked previously')
@@ -206,11 +201,7 @@ def facebook_callback(resp):
                     _external=True))
         
         else:
-            user = User(nickname = fb_username, email = fb_email, role = ROLE_USER, facebook_id = str(fb_id))
-            db.session.add(user)
-            db.session.commit()
-            db.session.add(user.follow(user))
-            db.session.commit()
+            dq.init_user(fb_username, fb_email, ROLE_USER, None, None, str(fb_id), None, None)
 
     login_user(user, remember = remember_me)
 
@@ -224,9 +215,7 @@ def get_facebook_oauth_token():
 
 @app.route('/deconnect/facebook')
 def deconnect_facebook():
-    g.user.facebook_id = None
-    db.session.add(g.user)
-    db.session.commit()
+    dq.update(g.user, ['facebook_id'], [None])
     return redirect(url_for('settings'))
 
 @app.route('/logout')
@@ -344,10 +333,7 @@ def user(nickname, page = 1):
 
     form = EditForm(g.user.nickname)
     if form.validate_on_submit():
-        g.user.nickname = form.nickname.data
-        g.user.about_me = form.about_me.data
-        db.session.add(g.user)
-        db.session.commit()
+        dq.update(g.user, ['nickname', 'about_me'], [form.nickname.data, form.about_me.data])
         flash('Your changes have been saved.')
         return redirect(url_for('user', nickname = nickname))
     else:
@@ -366,10 +352,7 @@ def user(nickname, page = 1):
 def settings():
     edit_form = EditForm(g.user.nickname)
     if edit_form.validate_on_submit():
-        g.user.nickname = edit_form.nickname.data
-        g.user.about_me = edit_form.about_me.data
-        db.session.add(g.user)
-        db.session.commit()
+        dq.update(g.user, ['nickname', 'about_me'], [form.nickname.data, form.about_me.data])
         flash('Your changes have been saved.')
         return redirect(url_for('user', nickname = g.user.nickname))
     else:
@@ -384,28 +367,28 @@ def settings():
 
 @app.route('/follow/<nickname>')
 def follow(nickname):
-    user = User.query.filter_by(nickname = nickname).first()
+    user = dq.find(User, ['nickname'], [nickname]).first()
     if user == None:
         flash('User ' + nickname + ' not found.')
         return redirect(url_for('index'))
     if user == g.user:
         flash('You can\'t follow yourself!')
         return redirect(url_for('user', nickname = nickname))
-    u = g.user.follow(user)
-    if u is None:
+
+    request = dq.send_request(g.user, user)
+    if request is False:
         flash('Cannot follow ' + nickname + '.')
         return redirect(url_for('user', nickname = nickname))
-    db.session.add(u)
-    db.session.commit()
-    if not user.is_valid_friend(g.user):
-        flash('Your request has been sent to ' + nickname + '!')
     else:
-        flash('You are now friend with ' + nickname + '!')
+        if not user.is_valid_friend(g.user):
+            flash('Your request has been sent to ' + nickname + '!')
+        else:
+            flash('You are now friend with ' + nickname + '!')
     return redirect(url_for('user', nickname = nickname))
 
 @app.route('/unfollow/<nickname>')
 def unfollow(nickname):
-    user = User.query.filter_by(nickname = nickname).first()
+    user = dq.find(User, ['nickname'], [nickname]).first()
     if user == None:
         flash('User ' + nickname + ' not found.')
         return redirect(url_for('index'))
@@ -467,6 +450,7 @@ def query(bid, amt):
         if not g.user.is_valid_friend(borrower):
             g.user.follow(borrower)
             borrower.follow(g.user)
+            db.session.commit()
 
         #add history record in database
         db.session.add(History(amount = amount, timestamp = time, lender_id = lender.id, borrower_id = borrower.id))

@@ -8,11 +8,16 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from momentjs import momentjs
 from flask_oauth import OAuth
 
+
+
 #flask config
 app = Flask(__name__)
 app.config.from_object('config')
 #database config
 db = SQLAlchemy(app)
+#dataquery
+from query import DataQuery
+dq = DataQuery()
 #date and time
 app.jinja_env.globals['momentjs'] = momentjs
 
