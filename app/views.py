@@ -73,6 +73,7 @@ def weibo_callback():
     session['wb_access_token'] = access_token
     session['wb_expires_in'] = expires_in
     client.set_access_token(access_token, expires_in)
+    wb_id = client.account.get_uid.get()['uid']
 
     next_url = request.args.get('next') or url_for('index')
 
@@ -82,9 +83,7 @@ def weibo_callback():
         if r is None or r.access_token is None:
             flash('You denied the connection')
             return redirect(next_url)
-        
-        wb_id = client.account.get_uid.get()['uid']
-        
+
         if dq.find(User, ['weibo_id'], [str(wb_id)]).first() is None:
             dq.update(g.user, ['weibo_id'], [str(wb_id)])
             flash('You are now linked with %s' % client.users.show.get(uid=wb_id)['screen_name'])
@@ -101,9 +100,8 @@ def weibo_callback():
             return redirect(next_url)
 
         #user data from server
-        wb_id = client.account.get_uid.get()['uid']
         wb_email = client.account.profile.email.get(access_token=access_token)['email']
-        weibo_user = client.users.show.get(uid=uid)
+        weibo_user = client.users.show.get(uid=wb_id)
         wb_nickname = weibo_user['screen_name']
         wb_img = weibo_user['avatar_large']
 
