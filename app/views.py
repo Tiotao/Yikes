@@ -17,10 +17,7 @@ def load_user(id):
 def before_request():
     g.user = current_user
     if g.user.is_authenticated():
-        g.user.last_seen = datetime.utcnow()
-        db.session.add(g.user)
-        db.session.commit()
-        g.search_form = SearchForm()
+        dq.update(g.user, ['last_seen'], [datetime.utcnow()])
 
 #LOGIN
 #oid
@@ -57,7 +54,7 @@ def after_login(resp):
 #dev without internet
 @app.route('/devlogin')
 def devlogin():
-    user = User.query.filter_by(nickname='tiotaocn').first()
+    user = dq.find(User, ['nickname'], ['tiotaocn']).first()
     login_user(user, remember = True)
     return redirect(request.args.get('next') or url_for('index'))
 
@@ -88,7 +85,7 @@ def weibo_callback():
         
         wb_id = client.account.get_uid.get()['uid']
         
-        if User.query.filter_by(weibo_id=str(wb_id)).first() is None:
+        if dq.find(User, ['weibo_id'], [str(wb_id)]).first() is None:
             dq.update(g.user, ['weibo_id'], [str(wb_id)])
             flash('You are now linked with %s' % client.users.show.get(uid=wb_id)['screen_name'])
         else:
@@ -110,12 +107,12 @@ def weibo_callback():
         wb_nickname = weibo_user['screen_name']
         wb_img = weibo_user['avatar_large']
 
-        user = User.query.filter_by(weibo_id=str(wb_id)).first()
+        user = dq.find(User, ['weibo_id'], [str(wb_id)]).first()
 
         #cannot find a user with the current weibo id        
         if user is None:
 
-            u = User.query.filter_by(email=wb_email).first()
+            u = dq.find(User, ['email'], [str(wb_email)]).first()
             # email taken
             if u:
                 login_user(u, remember = remember_me)
@@ -138,10 +135,7 @@ def weibo_callback():
 
 @app.route('/deconnect/weibo')
 def deconnect_weibo():
-    g.user.weibo_id = None
-    g.user.weibo_img = None
-    db.session.add(g.user)
-    db.session.commit()
+    dq.update(g.user, ['weibo_id','weibo_img'], [None, None])
     return redirect(url_for('settings'))
 
 
@@ -179,9 +173,11 @@ def facebook_callback(resp):
     else:
         fb_username = fb_user.data['name']
 
+    user = dq.find(User, ['facebook_id'], [str(fb_id)]).first()
+
     #for connecting user's acc with facebook acc
     if g.user is not None and g.user.is_authenticated():
-        if User.query.filter_by(facebook_id=str(fb_id)).first() is None:
+        if user is None:
             dq.update(g.user, ['facebook_id'], [str(fb_id)])
             flash('You are now linked with %s' % fb_username)
         else:
@@ -190,16 +186,14 @@ def facebook_callback(resp):
         return redirect(url_for('settings'))
 
     #for new login
-    user = User.query.filter_by(facebook_id=str(fb_id)).first()
 
     if user is None:
-        u = User.query.filter_by(email=fb_email).first()        
+        u = dq.find(User, ['email'], [str(fb_email)]).first()
         if u:
             login_user(u, remember = remember_me)
             return facebook.authorize(callback=url_for('facebook_callback',
                     next=request.args.get('next') or request.referrer or None,
                     _external=True))
-        
         else:
             dq.init_user(fb_username, fb_email, ROLE_USER, None, None, str(fb_id), None, None)
 
@@ -243,48 +237,12 @@ def index(page = 1):
     if form.validate_on_submit():
         borrower = g.user
         lender = User().from_id(form.lender.data)
-
-        #add history record in database
-        db.session.add(History(amount = form.amount.data, timestamp = time, lender_id = form.lender.data, borrower_id = borrower.id))
-
-        #store mutual friends in temp_group => nodes
-        temp_group = borrower.mutual_friends(lender)
-        temp_group_id = []
-        for u in temp_group:
-            temp_group_id.append(str(u.id))
-
-        nodes = temp_group_id
-        records = Record.query.all()
-
-        #store related records in edges
-        edges_record = Record().get_records(temp_group_id)
-        edges = []
-        weights = []
-        
-        for r in edges_record:
-            edges.append((str(r.borrower_id), str(r.lender_id)))
-            weights.append(r.amount)
-            #delete existing records
-            db.session.delete(r)
-            db.session.commit()
-
-        #create graph model from edges and nodes
-        req = UpdateRequest()
-        req.form_graph(nodes, edges, weights)
-        
-        #add new record into graph model
-        req.add_record(str(borrower.id), str(lender.id), form.amount.data)
-        
-        #export edges from graph model
-        new_records = req.all_edges()
-        for rec in new_records:    
-            #re-organize current record in database
-            db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
-            db.session.commit()
-
-        
-        flash('Your record is now live!')
-        return redirect(url_for('index'))
+        if dq.new_record(borrower, lender, amount) is True:
+            flash('Your record is now live!')
+            return redirect(url_for('index'))
+        else:
+            flash('Your record is not successful')
+            return redirect(url_for('index'))
     #borrow records and lend records
     borrow_records = g.user.borrow_records()#.paginate(page, RECORDS_PER_PAGE, False)
     lend_records = g.user.lend_records()#.paginate(page, RECORDS_PER_PAGE, False)
@@ -298,11 +256,11 @@ def index(page = 1):
 @app.route('/social', methods= ['GET', 'POST'])
 @login_required
 def social():
-    friends = User.query.filter_by(nickname = g.user.nickname).first().valid_friends()
+    friends = dq.find(User, ['nickname'], [g.user.nickname]).first().valid_friends()
     form = SearchForm(request.form)
     if form.validate_on_submit():
         nickname = form.search.data
-        results = User.query.filter_by(nickname=nickname)
+        results = dq.find(User, ['nickname'], [nickname])
         count=results.count()
         return render_template('social.html', friends=friends, form=form, results=results, results_count=count)
     return render_template('social.html', friends=friends, form=form, results=None, results_count=-1)
@@ -320,7 +278,7 @@ def notice():
 @app.route('/user/<nickname>/<int:page>', methods = ['GET', 'POST'])
 @login_required
 def user(nickname, page = 1):
-    user = User.query.filter_by(nickname = nickname).first()
+    user = dq.find(User, ['nickname'], [nickname]).first()
     if user == None:
         flash('User ' + nickname +' does not exist!' )
         return redirect(url_for('index'))
@@ -328,7 +286,7 @@ def user(nickname, page = 1):
     #data
     borrow_records = g.user.borrow_history()
     lend_records = g.user.lend_history()
-    friends = User.query.filter_by(nickname = nickname).first().valid_friends()
+    friends = user.valid_friends()
 
 
     form = EditForm(g.user.nickname)
@@ -407,8 +365,8 @@ def unfollow(nickname):
 @app.route('/ignore_response/<id>')
 @login_required
 def ignore_response(id):
-    req = FriendRequest.query.filter_by(id = id).first()
-    sender = User().from_id(req.sender_id)
+    req = dq.find(FriendRequest,['id'],[id]).first()
+    #sender = User().from_id(req.sender_id)
     nickname = g.user.nickname
     db.session.delete(req)
     db.session.commit()
@@ -417,10 +375,10 @@ def ignore_response(id):
 
 @app.route('/admin')
 def admin():
-    users = User.query.all()
-    requests = FriendRequest.query.all()
-    records = Record.query.all()
-    histories = History.query.all()
+    users = dq.find(User, [],[])
+    requests = dq.find(FriendRequest,[],[])
+    records = dq.find(Record,[],[])
+    histories = dq.find(History,[],[])
     return render_template('admin.html', users=users, requests = requests, records = records, histories = histories)
 
 #QR SERVICES
@@ -445,50 +403,11 @@ def query(bid, amt):
         amount = int(amt)
         borrower = User().from_id(borrower_id)
         lender = g.user
-        time = datetime.utcnow()
 
-        if not g.user.is_valid_friend(borrower):
-            g.user.follow(borrower)
-            borrower.follow(g.user)
-            db.session.commit()
+        if not lender.is_valid_friend(borrower):
+            dq.be_friend(lender, borrower)
 
-        #add history record in database
-        db.session.add(History(amount = amount, timestamp = time, lender_id = lender.id, borrower_id = borrower.id))
-
-        #store mutual friends in temp_group => nodes
-        temp_group = borrower.mutual_friends(lender)
-        temp_group_id = []
-        for u in temp_group:
-            temp_group_id.append(str(u.id))
-
-        nodes = temp_group_id
-        records = Record.query.all()
-
-        #store related records in edges
-        edges_record = Record().get_records(temp_group_id)
-        edges = []
-        weights = []
-        
-        for r in edges_record:
-            edges.append((str(r.borrower_id), str(r.lender_id)))
-            weights.append(r.amount)
-            #delete existing records
-            db.session.delete(r)
-            db.session.commit()
-
-        #create graph model from edges and nodes
-        req = UpdateRequest()
-        req.form_graph(nodes, edges, weights)
-        
-        #add new record into graph model
-        req.add_record(str(borrower.id), str(lender.id), amount)
-        
-        #export edges from graph model
-        new_records = req.all_edges()
-        for rec in new_records:    
-            #re-organize current record in database
-            db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
-            db.session.commit()
+        dq.new_record(borrower, lender, amount)
 
         return redirect(url_for('index'))
 

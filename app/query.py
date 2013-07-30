@@ -2,6 +2,7 @@ from models import User, ROLE_USER, ROLE_ADMIN, REQUEST_PENDING, REQUEST_CONFIRM
 from app import db
 from flask import g, session
 from datetime import datetime
+from main import UpdateRequest
 
 class DataQuery(object):
 
@@ -36,6 +37,16 @@ class DataQuery(object):
 			db.session.commit()
 			return True
 
+	def be_friend(self, user1, user2):
+		if user1 is None or user2 is None:
+			print "none of the users shall be None"
+			return False
+		else:
+			user1.follow(user2)
+	        user2.follow(user1)
+	        db.session.commit()
+	        return True
+
 
 	#update all data types
 	def update(self, target, items, data):
@@ -53,12 +64,24 @@ class DataQuery(object):
 			db.session.commit()
 			return True
 
+	#delete all data types
+	def delete(self, target):
+		if target is None:
+			print "target does not exist"
+			return False
+		else:
+			db.session.delete(target)
+			db.session.commit()
+			return True
+
 	#data filter
 	def find(self, Type, items, data):
 		#find entry with type Type and follows (item = datam)
 		if len(items) != len(data):
 			print "unacceptable data and items input!"
 			return False
+		elif len(items) == 0:
+			return Type.query.all()
 		else:
 			criteria = {}
 			for i in range(0, len(items)):
@@ -67,5 +90,53 @@ class DataQuery(object):
 				filter_by(**criteria)
 
 
+	#new record
 
+	def new_record(self, borrower, lender, amount):
+
+		if borrower is None or lender is None or amount is None:
+			print "missing value"
+			return False
+		else:	
+			time = datetime.utcnow()
+
+			#add history record in database
+			db.session.add(History(amount = amount, timestamp = time, lender_id = lender.id, borrower_id = borrower.id))
+
+			#store mutual friends in temp_group => nodes
+			temp_group = borrower.mutual_friends(lender)
+			temp_group_id = []
+			for u in temp_group:
+			    temp_group_id.append(str(u.id))
+
+			nodes = temp_group_id
+			records = Record.query.all()
+
+			#store related records in edges
+			edges_record = Record().get_records(temp_group_id)
+			edges = []
+			weights = []
+
+			for r in edges_record:
+				edges.append((str(r.borrower_id), str(r.lender_id)))
+				weights.append(r.amount)
+				#delete existing records
+				db.session.delete(r)
+				db.session.commit()
+
+			#create graph model from edges and nodes
+			req = UpdateRequest()
+			req.form_graph(nodes, edges, weights)
+
+			#add new record into graph model
+			req.add_record(str(borrower.id), str(lender.id), form.amount.data)
+
+			#export edges from graph model
+			new_records = req.all_edges()
+			for rec in new_records:    
+				#re-organize current record in database
+				db.session.add(Record(amount = rec[2], timestamp = time, lender_id = int(rec[1]), borrower_id = int(rec[0])))
+				db.session.commit()
+
+			return True
 
